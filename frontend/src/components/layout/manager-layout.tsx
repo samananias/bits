@@ -8,10 +8,11 @@ import { SessionExpiredModal } from './shared/SessionExpiredModal'
 import { SessionExpiringWarning } from './shared/SessionExpiringWarning'
 import Sidebar from './manager-sidebar'
 import TopBar from './manager-topbar'
+import { GuestActionNotice } from './shared/GuestActionNotice'
 import { GlobalLoading } from '@/components/ui/GlobalLoading'
 
 export function ManagerLayout({ children }: { children: React.ReactNode }) {
-    const { isLoading, isAuthenticated } = useAuth('MANAGER')
+    const { isLoading, isAuthenticated, employee } = useAuth('MANAGER')
     useInactivityTimeout()
     useTokenRefresh()
     const [isMobileOpen, setIsMobileOpen] = useState(false)
@@ -27,10 +28,13 @@ export function ManagerLayout({ children }: { children: React.ReactNode }) {
         )
     }
 
+    const guestRole = employee?.isGuest ? (employee.guestViewRole ?? employee.role) : undefined
+
     return (
         <div className="h-screen bg-slate-50 overflow-hidden relative">
             <SessionExpiredModal />
             <SessionExpiringWarning />
+            {guestRole && <GuestActionNotice />}
             <a
                 href="#main-content"
                 className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-brand focus:font-bold"
@@ -39,7 +43,7 @@ export function ManagerLayout({ children }: { children: React.ReactNode }) {
             </a>
 
             <header className="fixed top-0 left-0 right-0 z-40 h-16">
-                <TopBar setIsMobileOpen={setIsMobileOpen} />
+                <TopBar setIsMobileOpen={setIsMobileOpen} guestRole={guestRole} />
             </header>
 
             {/* Mobile Overlay */}

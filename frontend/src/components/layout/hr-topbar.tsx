@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { User, Menu, Settings, LogOut, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useServerTime } from '@/hooks/useServerTime';
+import { GuestModeMenu, type GuestRole } from './shared/GuestModeMenu';
 
-export default function TopBar({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => void }) {
+export default function TopBar({ setIsMobileOpen, guestRole }: { setIsMobileOpen: (val: boolean) => void; guestRole?: GuestRole }) {
   const router = useRouter();
   const { serverTime: time, isSynced } = useServerTime(1000);
   const [mounted, setMounted] = useState(false);
@@ -95,6 +96,9 @@ export default function TopBar({ setIsMobileOpen }: { setIsMobileOpen: (val: boo
           <p className="text-sm font-black text-slate-700 font-mono tracking-tighter">{mounted ? time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) : ''}</p>
         </div>
 
+        {guestRole ? (
+          <GuestModeMenu role={guestRole} />
+        ) : (
         <div className="relative z-110" ref={dropdownRef}>
           <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="flex items-center gap-2 group p-1 rounded-full hover:bg-slate-50 transition-colors">
             <div className={`h-9 w-9 rounded-full flex items-center justify-center transition-transform overflow-hidden relative shrink-0 ${
@@ -137,6 +141,7 @@ export default function TopBar({ setIsMobileOpen }: { setIsMobileOpen: (val: boo
             </div>
           )}
         </div>
+        )}
       </div>
     </header>
   );

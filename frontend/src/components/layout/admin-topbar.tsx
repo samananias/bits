@@ -6,12 +6,15 @@ import { User, Menu, Settings, LogOut, ChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import { useServerTime } from '@/hooks/useServerTime'
 import { useDeviceStream, DeviceStatusPayload, DeviceConnectedPayload } from '@/features/devices/hooks/useDeviceStream'
+import { GuestModeMenu, type GuestRole } from './shared/GuestModeMenu'
 
 interface AdminTopbarProps {
   onMenuClick: () => void
+  /** Set only for guest sessions; replaces the profile dropdown with the guest control. */
+  guestRole?: GuestRole
 }
 
-export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
+export function AdminTopbar({ onMenuClick, guestRole }: AdminTopbarProps) {
   const router = useRouter()
   const { serverTime: time, isSynced } = useServerTime(1000)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -151,7 +154,10 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
           <p className="text-sm font-black text-gray-700 font-mono tracking-tighter">{time ? time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) : '\u00A0'}</p>
         </div>
 
-        {/* Profile Dropdown */}
+        {/* Profile Dropdown (guest sessions use the Guest Mode control instead) */}
+        {guestRole ? (
+          <GuestModeMenu role={guestRole} />
+        ) : (
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -200,6 +206,7 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
             </div>
           )}
         </div>
+        )}
       </div>
     </header>
   )

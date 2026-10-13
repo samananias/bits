@@ -1,5 +1,5 @@
 import React from 'react'
-import { Eye, EyeOff, Lock, User } from 'lucide-react'
+import { Eye, EyeOff, Lock, User, Loader2 } from 'lucide-react'
 import { useLogin } from '../hooks/useLogin'
 
 interface LoginFormProps {
@@ -17,16 +17,45 @@ export function LoginForm({ loginState }: LoginFormProps) {
     validationErrors,
     setValidationErrors,
     isLoading,
-    handleSubmit
+    isGuestLoading,
+    guestError,
+    handleSubmit,
+    handleGuestLogin
   } = loginState
 
   return (
     <>
       <div className="relative mb-9">
-        <div className="flex items-center gap-2">
-          <User className="h-7 w-7 text-red-600" />
-          <h1 className="text-2xl font-bold text-gray-700">User Login</h1>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <div className="flex items-center gap-2">
+            <User className="h-7 w-7 text-red-600" />
+            <h1 className="text-2xl font-bold text-gray-700">User Login</h1>
+          </div>
+
+          <button
+            type="button"
+            id="explore-as-guest"
+            onClick={() => handleGuestLogin('ADMIN')}
+            disabled={isLoading || isGuestLoading}
+            aria-describedby="explore-as-guest-desc"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50/80 hover:bg-red-100/80 border border-red-200/80 transition-all duration-200 cursor-pointer disabled:opacity-50 shadow-xs hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+            title="Explore live demo views as guest (read-only)"
+          >
+            {isGuestLoading && (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" aria-hidden="true" />
+            )}
+            <span>Explore as Guest</span>
+          </button>
+          <span id="explore-as-guest-desc" className="sr-only">
+            Read-only preview. No account needed.
+          </span>
         </div>
+
+        {guestError && (
+          <p role="alert" className="mt-2 text-right text-xs text-red-600">
+            {guestError}
+          </p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -95,7 +124,7 @@ export function LoginForm({ loginState }: LoginFormProps) {
         <div className="flex justify-center pt-6">
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || isGuestLoading}
             className="auth-login-btn inline-block rounded-full bg-red-600 px-8 py-3 font-bold text-white transition hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {isLoading ? 'LOGGING IN...' : 'LOG IN'}

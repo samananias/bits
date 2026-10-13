@@ -101,6 +101,35 @@ export function useLogin() {
     }
   }
 
+  const [isGuestLoading, setIsGuestLoading] = useState(false)
+  const [guestError, setGuestError] = useState<string | null>(null)
+
+  const handleGuestLogin = async (role: 'ADMIN' | 'HR' | 'MANAGER' | 'USER' = 'ADMIN') => {
+    setIsGuestLoading(true)
+    setGuestError(null)
+    setValidationErrors({})
+    try {
+      const res = await fetch('/api/auth/guest-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        setGuestError(data.message || 'Failed to start guest session')
+        setIsGuestLoading(false)
+        return
+      }
+
+      setShowLoading(true)
+      router.push('/dashboard')
+    } catch {
+      setGuestError('Network error starting guest mode. Please check if the server is running.')
+      setIsGuestLoading(false)
+    }
+  }
+
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword)
   }
@@ -115,7 +144,11 @@ export function useLogin() {
     validationErrors,
     setValidationErrors,
     isLoading,
+    isGuestLoading,
+    guestError,
+    setGuestError,
     showLoading,
-    handleSubmit
+    handleSubmit,
+    handleGuestLogin
   }
 }

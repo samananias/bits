@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, refreshToken, logout, me } from './auth.controller';
+import { register, login, refreshToken, logout, me, guestLogin, guestView } from './auth.controller';
 import { validate } from '../../shared/middleware/validation.middleware';
 import { registerValidator, loginValidator } from './auth.validator';
 import { authenticate } from '../../shared/middleware/auth.middleware';
@@ -203,5 +203,23 @@ router.post('/logout', logout);
  *         description: Not authenticated
  */
 router.get('/me', authenticate, me);
+
+/**
+ * @swagger
+ * /api/auth/guest-login:
+ *   post:
+ *     summary: Enter guest demonstration mode
+ *     tags: [Auth]
+ */
+router.post('/guest-login', guestLogin);
+
+/**
+ * @swagger
+ * /api/auth/guest-view:
+ *   post:
+ *     summary: Switch active role view in guest demonstration mode
+ *     tags: [Auth]
+ */
+router.post('/guest-view', authenticate, guestView);
 
 export default router;

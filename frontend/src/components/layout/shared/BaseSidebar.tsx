@@ -86,7 +86,7 @@ export function BaseSidebar({
       )}
       
       <aside aria-label="Main navigation" className={`sidebar-root
-      fixed z-60 bg-brand flex flex-col transition-all duration-300 ease-in-out
+      fixed z-40 bg-brand flex flex-col transition-all duration-300 ease-in-out
       
       /* Mobile View: Full height, flush to edges */
       top-0 bottom-0 left-0 rounded-none w-72

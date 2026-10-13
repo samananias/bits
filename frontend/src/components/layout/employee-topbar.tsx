@@ -5,12 +5,15 @@ import { useRouter } from 'next/navigation'
 import { User, Menu, Settings, LogOut, ChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import { useServerTime } from '@/hooks/useServerTime'
+import { GuestModeMenu, type GuestRole } from './shared/GuestModeMenu'
 
 interface EmployeeTopbarProps {
   onMenuClick: () => void
+  /** Set only for guest sessions; replaces the profile dropdown with the guest control. */
+  guestRole?: GuestRole
 }
 
-export function EmployeeTopbar({ onMenuClick }: EmployeeTopbarProps) {
+export function EmployeeTopbar({ onMenuClick, guestRole }: EmployeeTopbarProps) {
   const router = useRouter()
   const { serverTime: time } = useServerTime(1000)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -83,7 +86,10 @@ export function EmployeeTopbar({ onMenuClick }: EmployeeTopbarProps) {
           <p className="text-sm font-black text-gray-700 font-mono tracking-tighter">{time ? time.toLocaleTimeString() : '\u00A0'}</p>
         </div>
 
-        {/* Profile Dropdown */}
+        {/* Profile Dropdown (guest sessions use the Guest Mode control instead) */}
+        {guestRole ? (
+          <GuestModeMenu role={guestRole} />
+        ) : (
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -127,6 +133,7 @@ export function EmployeeTopbar({ onMenuClick }: EmployeeTopbarProps) {
             </div>
           )}
         </div>
+        )}
       </div>
     </header>
   )

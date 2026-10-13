@@ -8,6 +8,7 @@ import { SessionExpiredModal } from './shared/SessionExpiredModal'
 import { SessionExpiringWarning } from './shared/SessionExpiringWarning'
 import { AdminSidebar } from './admin-sidebar'
 import { AdminTopbar } from './admin-topbar'
+import { GuestActionNotice } from './shared/GuestActionNotice'
 import { GlobalLoading } from '@/components/ui/GlobalLoading'
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -27,10 +28,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         )
     }
 
+    const guestRole = employee?.isGuest ? (employee.guestViewRole ?? employee.role) : undefined
+
     return (
         <div className="h-screen bg-gray-50 overflow-hidden relative">
             <SessionExpiredModal />
             <SessionExpiringWarning />
+            {guestRole && <GuestActionNotice />}
             <a
                 href="#main-content"
                 className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-brand focus:font-bold"
@@ -39,7 +43,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </a>
 
             {/* Top Bar - full width, above everything */}
-            <AdminTopbar onMenuClick={() => setSidebarOpen(true)} />
+            <AdminTopbar onMenuClick={() => setSidebarOpen(true)} guestRole={guestRole} />
 
             {/* Mobile Overlay */}
             {sidebarOpen && (

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
+import { guestGuard } from './guestGuard.middleware';
 
 // JWT_SECRET is guaranteed to exist at startup by the validation in token.utils.ts.
 // If the server started, this variable is safe to use.
@@ -17,6 +18,8 @@ declare global {
                 lastName: string;
                 name: string;
                 departmentIds?: number[];
+                isGuest?: boolean;
+                guestViewRole?: string;
             };
             correlationId: string;
         }
@@ -69,7 +72,23 @@ export const authenticate = async (
             firstName: string;
             lastName: string;
             name: string;
+            isGuest?: boolean;
+            guestViewRole?: string;
         };
+
+        // ── Guest Session Fast-Path (No DB record needed) ──────────────────────
+        if (decoded.isGuest) {
+            req.user = {
+                employeeId: 0,
+                role: decoded.guestViewRole || decoded.role || 'ADMIN',
+                firstName: 'Guest',
+                lastName: 'Visitor',
+                name: 'Guest Visitor',
+                isGuest: true,
+                guestViewRole: decoded.guestViewRole || decoded.role || 'ADMIN',
+            };
+            return guestGuard(req, res, next);
+        }
 
         // ── Fresh DB check: verify the account is still active ────────────────
         const freshUser = await prisma.employee.findUnique({

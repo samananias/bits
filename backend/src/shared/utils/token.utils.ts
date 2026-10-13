@@ -27,6 +27,8 @@ export interface TokenPayload {
     firstName: string;
     lastName: string;
     name: string;
+    isGuest?: boolean;
+    guestViewRole?: string;
 }
 
 /**

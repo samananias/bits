@@ -133,6 +133,22 @@ if (typeof window !== 'undefined') {
         }
       }
 
+      // 3. If 403 Forbidden due to Guest Mode read-only restriction, signal UI
+      if (response.status === 403) {
+        try {
+          const clone = response.clone();
+          clone.json().then((data) => {
+            if (data?.error === 'guest_read_only') {
+              window.dispatchEvent(new CustomEvent('guest-action-blocked', {
+                detail: { message: data.message || 'Action disabled in Guest Mode (Read-Only).' }
+              }));
+            }
+          }).catch(() => {});
+        } catch {
+          // ignore clone error
+        }
+      }
+
       return response;
     };
   }
