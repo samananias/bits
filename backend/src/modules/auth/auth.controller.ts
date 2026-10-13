@@ -439,6 +439,32 @@ export const me = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
+        // Fast-path for Guest Mode sessions (no DB query needed)
+        if (req.user.isGuest) {
+            res.status(200).json({
+                success: true,
+                employee: {
+                    id: 0,
+                    firstName: 'Guest',
+                    lastName: 'Visitor',
+                    email: 'guest@bits.demo',
+                    role: req.user.role,
+                    contactNumber: null,
+                    departmentId: null,
+                    Department: { name: 'Demo / Guest' },
+                    branchId: null,
+                    Branch: { name: 'Main Office (Demo)' },
+                    position: 'Guest Explorer',
+                    employmentStatus: 'ACTIVE',
+                    needsPasswordChange: false,
+                    profilePicture: null,
+                    isGuest: true,
+                    guestViewRole: req.user.guestViewRole || req.user.role,
+                }
+            });
+            return;
+        }
+
         const employee = await prisma.employee.findUnique({
             where: { id: req.user.employeeId },
             select: {
@@ -477,4 +503,109 @@ export const me = async (req: Request, res: Response): Promise<void> => {
         res.status(500).json({ success: false, message: 'Failed to fetch user.', error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : 'Internal server error' });
     }
 };
+
+/**
+ * POST /api/auth/guest-login
+ * Enters Guest Mode with a designated view role (defaults to ADMIN).
+ * Issues an ephemeral JWT cookie (45m expiry) with isGuest: true.
+ */
+export const guestLogin = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const requestedRole = req.body?.role as string | undefined;
+        const allowedRoles = ['ADMIN', 'HR', 'MANAGER', 'USER'];
+        const targetRole = (requestedRole && allowedRoles.includes(requestedRole.toUpperCase()))
+            ? requestedRole.toUpperCase()
+            : 'ADMIN';
+
+        const tokenPayload = {
+            employeeId: 0,
+            role: targetRole,
+            guestViewRole: targetRole,
+            isGuest: true,
+            firstName: 'Guest',
+            lastName: 'Visitor',
+            name: 'Guest Visitor'
+        };
+
+        const accessToken = generateAccessToken(tokenPayload);
+
+        // Clear any lingering refresh tokens
+        res.clearCookie('refresh_token', cookieOptions);
+
+        // 45-minute ephemeral guest access token
+        res.cookie('auth_token', accessToken, {
+            ...cookieOptions,
+            maxAge: 45 * 60 * 1000,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `Entered Guest Mode as ${targetRole}`,
+            accessToken,
+            employee: {
+                id: 0,
+                firstName: 'Guest',
+                lastName: 'Visitor',
+                email: 'guest@bits.demo',
+                role: targetRole,
+                isGuest: true,
+                guestViewRole: targetRole,
+                needsPasswordChange: false
+            }
+        });
+    } catch (error) {
+        console.error('Guest login failed:', error);
+        res.status(500).json({ success: false, message: 'Failed to enter guest mode' });
+    }
+};
+
+/**
+ * POST /api/auth/guest-view
+ * Seamlessly switches the simulated role view during an active Guest Mode session.
+ */
+export const guestView = async (req: Request, res: Response): Promise<void> => {
+    try {
+        if (!req.user?.isGuest) {
+            res.status(403).json({ success: false, message: 'Role switching is only available in Guest Mode.' });
+            return;
+        }
+
+        const requestedRole = req.body?.role as string | undefined;
+        const allowedRoles = ['ADMIN', 'HR', 'MANAGER', 'USER'];
+        if (!requestedRole || !allowedRoles.includes(requestedRole.toUpperCase())) {
+            res.status(400).json({ success: false, message: 'Invalid role requested.' });
+            return;
+        }
+
+        const targetRole = requestedRole.toUpperCase();
+
+        const tokenPayload = {
+            employeeId: 0,
+            role: targetRole,
+            guestViewRole: targetRole,
+            isGuest: true,
+            firstName: 'Guest',
+            lastName: 'Visitor',
+            name: 'Guest Visitor'
+        };
+
+        const accessToken = generateAccessToken(tokenPayload);
+
+        res.cookie('auth_token', accessToken, {
+            ...cookieOptions,
+            maxAge: 45 * 60 * 1000,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `Switched view to ${targetRole}`,
+            accessToken,
+            role: targetRole
+        });
+    } catch (error) {
+        console.error('Guest view change failed:', error);
+        res.status(500).json({ success: false, message: 'Failed to switch role view' });
+    }
+};
+
 

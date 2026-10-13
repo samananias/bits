@@ -6,7 +6,7 @@ import { User, Menu, Settings, LogOut, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useServerTime } from '@/hooks/useServerTime';
 
-export default function TopBar({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => void }) {
+export default function TopBar({ setIsMobileOpen, isGuest = false }: { setIsMobileOpen: (val: boolean) => void; isGuest?: boolean }) {
   const router = useRouter();
   const { serverTime: time } = useServerTime(1000);
   const [mounted, setMounted] = useState(false);
@@ -95,6 +95,14 @@ export default function TopBar({ setIsMobileOpen }: { setIsMobileOpen: (val: boo
           <p className="text-sm font-black text-slate-700 font-mono tracking-tighter">{mounted ? time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) : ''}</p>
         </div>
 
+        {/* Guest Mode Indicator Badge */}
+        {isGuest && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 text-red-700 rounded-full text-xs font-bold shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+            <span className="hidden sm:inline">Guest: Manager</span>
+          </div>
+        )}
+
         <div className="relative z-110" ref={dropdownRef}>
           <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="flex items-center gap-2 group p-1 rounded-full hover:bg-slate-50 transition-colors">
             <div className={`h-9 w-9 rounded-full flex items-center justify-center transition-transform overflow-hidden relative shrink-0 ${
@@ -121,8 +129,13 @@ export default function TopBar({ setIsMobileOpen }: { setIsMobileOpen: (val: boo
                     <User size={24} className="text-slate-400" />
                   )}
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Signed in as</p>
-                <p className="text-sm font-black text-slate-800 uppercase tracking-tight">{userName || 'Manager'}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isGuest ? 'Guest Session' : 'Signed in as'}</p>
+                <p className="text-sm font-black text-slate-800 uppercase tracking-tight">{userName || (isGuest ? 'Guest Manager' : 'Manager')}</p>
+                {isGuest && (
+                  <span className="mt-1 inline-block text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">
+                    Read-Only Access
+                  </span>
+                )}
               </div>
               <div className="p-1">
                 <Link href="/manager/settings" onClick={() => setIsProfileOpen(false)} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-xl transition-colors">

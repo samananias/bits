@@ -9,6 +9,7 @@ import { SessionExpiredModal } from './shared/SessionExpiredModal'
 import { SessionExpiringWarning } from './shared/SessionExpiringWarning'
 import { EmployeeSidebar } from './employee-sidebar'
 import { EmployeeTopbar } from './employee-topbar'
+import { GuestBanner } from './shared/GuestBanner'
 import { GlobalLoading } from '@/components/ui/GlobalLoading'
 
 export function EmployeeLayout({ children }: { children: React.ReactNode }) {
@@ -21,7 +22,7 @@ export function EmployeeLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter()
 
     useEffect(() => {
-        if (!isLoading && isAuthenticated && employee?.needsPasswordChange) {
+        if (!isLoading && isAuthenticated && employee?.needsPasswordChange && !employee?.isGuest) {
             if (pathname !== '/employee/profile') {
                 router.replace('/employee/profile')
             }
@@ -38,10 +39,13 @@ export function EmployeeLayout({ children }: { children: React.ReactNode }) {
         )
     }
 
+    const isGuest = Boolean(employee?.isGuest)
+
     return (
         <div className="h-screen bg-gray-50 overflow-hidden relative">
             <SessionExpiredModal />
             <SessionExpiringWarning />
+            <GuestBanner employee={employee} />
             <a
                 href="#main-content"
                 className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-brand focus:font-bold"
@@ -50,7 +54,7 @@ export function EmployeeLayout({ children }: { children: React.ReactNode }) {
             </a>
 
             {/* Top Bar - full width, above everything */}
-            <EmployeeTopbar onMenuClick={() => setSidebarOpen(true)} />
+            <EmployeeTopbar onMenuClick={() => setSidebarOpen(true)} isGuest={isGuest} />
 
             {/* Mobile Overlay */}
             {sidebarOpen && (
@@ -66,10 +70,11 @@ export function EmployeeLayout({ children }: { children: React.ReactNode }) {
                 isCollapsed={sidebarCollapsed}
                 onClose={() => setSidebarOpen(false)}
                 onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                isGuest={isGuest}
             />
 
             {/* Main Content Area */}
-            <div className={`h-[calc(100vh-4rem)] mt-16 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-24' : 'lg:ml-68'}`}>
+            <div className={`transition-all duration-300 ${isGuest ? 'h-[calc(100vh-6.5rem)] mt-[104px]' : 'h-[calc(100vh-4rem)] mt-16'} ${sidebarCollapsed ? 'lg:ml-24' : 'lg:ml-68'}`}>
                 <main id="main-content" className="h-full overflow-y-auto scrollbar-light p-4 md:p-8">
                     {children}
                 </main>

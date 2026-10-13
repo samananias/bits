@@ -8,9 +8,10 @@ import { useServerTime } from '@/hooks/useServerTime'
 
 interface EmployeeTopbarProps {
   onMenuClick: () => void
+  isGuest?: boolean
 }
 
-export function EmployeeTopbar({ onMenuClick }: EmployeeTopbarProps) {
+export function EmployeeTopbar({ onMenuClick, isGuest = false }: EmployeeTopbarProps) {
   const router = useRouter()
   const { serverTime: time } = useServerTime(1000)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -51,7 +52,7 @@ export function EmployeeTopbar({ onMenuClick }: EmployeeTopbarProps) {
   }
 
   return (
-    <header className="h-16 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 md:px-8 fixed top-0 left-0 right-0 z-70">
+    <header className={`h-16 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 md:px-8 fixed ${isGuest ? 'top-[40px]' : 'top-0'} left-0 right-0 z-40 transition-all`}>
       <div className="flex items-center gap-4 flex-1">
         {/* Mobile Menu Button */}
         <button
@@ -83,6 +84,14 @@ export function EmployeeTopbar({ onMenuClick }: EmployeeTopbarProps) {
           <p className="text-sm font-black text-gray-700 font-mono tracking-tighter">{time ? time.toLocaleTimeString() : '\u00A0'}</p>
         </div>
 
+        {/* Guest Mode Indicator Badge */}
+        {isGuest && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 text-red-700 rounded-full text-xs font-bold shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+            <span className="hidden sm:inline">Guest: Employee</span>
+          </div>
+        )}
+
         {/* Profile Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
@@ -113,8 +122,13 @@ export function EmployeeTopbar({ onMenuClick }: EmployeeTopbarProps) {
                     <User size={24} className="text-gray-400" />
                   )}
                 </div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Signed in as</p>
-                <p className="text-sm font-black text-gray-800 tracking-tight">{userName}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{isGuest ? 'Guest Session' : 'Signed in as'}</p>
+                <p className="text-sm font-black text-gray-800 tracking-tight">{userName || (isGuest ? 'Guest Employee' : 'Employee')}</p>
+                {isGuest && (
+                  <span className="mt-1 inline-block text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">
+                    Read-Only Access
+                  </span>
+                )}
               </div>
               <div className="p-1 border-t border-gray-50 mt-1">
                 <button

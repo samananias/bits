@@ -9,9 +9,10 @@ import { useDeviceStream, DeviceStatusPayload, DeviceConnectedPayload } from '@/
 
 interface AdminTopbarProps {
   onMenuClick: () => void
+  isGuest?: boolean
 }
 
-export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
+export function AdminTopbar({ onMenuClick, isGuest = false }: AdminTopbarProps) {
   const router = useRouter()
   const { serverTime: time, isSynced } = useServerTime(1000)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -91,7 +92,7 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
 
 
   return (
-    <header className="h-16 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 md:px-8 fixed top-0 left-0 right-0 z-40">
+    <header className={`h-16 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 md:px-8 fixed ${isGuest ? 'top-[40px]' : 'top-0'} left-0 right-0 z-40 transition-all`}>
       <div className="flex items-center gap-4 flex-1">
         {/* Mobile Menu Button */}
         <button
@@ -151,6 +152,14 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
           <p className="text-sm font-black text-gray-700 font-mono tracking-tighter">{time ? time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) : '\u00A0'}</p>
         </div>
 
+        {/* Guest Mode Indicator Badge */}
+        {isGuest && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 text-red-700 rounded-full text-xs font-bold shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+            <span className="hidden sm:inline">Guest: Admin</span>
+          </div>
+        )}
+
         {/* Profile Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
@@ -181,8 +190,13 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
                     <User className="mx-auto mt-2 text-gray-300" />
                   )}
                 </div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Signed in as</p>
-                <p className="text-sm font-black text-gray-800 tracking-tight">{userName || 'Admin'}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{isGuest ? 'Guest Session' : 'Signed in as'}</p>
+                <p className="text-sm font-black text-gray-800 tracking-tight">{userName || (isGuest ? 'Guest Administrator' : 'Admin')}</p>
+                {isGuest && (
+                  <span className="mt-1 inline-block text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">
+                    Read-Only Access
+                  </span>
+                )}
               </div>
               <div className="p-1">
                 <button onClick={() => { setIsProfileOpen(false); router.push('/settings') }} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors text-left">

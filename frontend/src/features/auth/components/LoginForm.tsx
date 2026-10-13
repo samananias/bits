@@ -1,5 +1,5 @@
 import React from 'react'
-import { Eye, EyeOff, Lock, User } from 'lucide-react'
+import { Eye, EyeOff, Lock, User, Sparkles, ArrowRight, Loader2 } from 'lucide-react'
 import { useLogin } from '../hooks/useLogin'
 
 interface LoginFormProps {
@@ -17,16 +17,33 @@ export function LoginForm({ loginState }: LoginFormProps) {
     validationErrors,
     setValidationErrors,
     isLoading,
-    handleSubmit
+    isGuestLoading,
+    handleSubmit,
+    handleGuestLogin
   } = loginState
 
   return (
     <>
-      <div className="relative mb-9">
+      <div className="relative mb-9 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <User className="h-7 w-7 text-red-600" />
           <h1 className="text-2xl font-bold text-gray-700">User Login</h1>
         </div>
+
+        <button
+          type="button"
+          onClick={() => handleGuestLogin('ADMIN')}
+          disabled={isLoading || isGuestLoading}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50/80 hover:bg-red-100/80 border border-red-200/80 transition-all duration-200 group cursor-pointer disabled:opacity-50 shadow-xs hover:shadow-sm"
+          title="Explore live demo views as guest (read-only)"
+        >
+          {isGuestLoading ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
+          ) : (
+            <Sparkles className="w-3.5 h-3.5 text-red-500 group-hover:scale-110 transition-transform" />
+          )}
+          <span>Explore as Guest</span>
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -95,7 +112,7 @@ export function LoginForm({ loginState }: LoginFormProps) {
         <div className="flex justify-center pt-6">
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || isGuestLoading}
             className="auth-login-btn inline-block rounded-full bg-red-600 px-8 py-3 font-bold text-white transition hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {isLoading ? 'LOGGING IN...' : 'LOG IN'}

@@ -24,10 +24,17 @@ export const departmentScope = async (req: Request, res: Response, next: NextFun
         }
 
         if (req.user.role === 'MANAGER') {
-            const departmentIds = await getManagerDepartmentIds(req.user.employeeId);
-            req.managerDepartmentIds = departmentIds;
-            // Also extend req.user with departmentIds for convenience
-            req.user.departmentIds = departmentIds;
+            if (req.user.isGuest) {
+                const allDepts = await import('../lib/prisma').then(p => p.prisma.department.findMany({ select: { id: true } }));
+                const departmentIds = allDepts.map(d => d.id);
+                req.managerDepartmentIds = departmentIds;
+                req.user.departmentIds = departmentIds;
+            } else {
+                const departmentIds = await getManagerDepartmentIds(req.user.employeeId);
+                req.managerDepartmentIds = departmentIds;
+                // Also extend req.user with departmentIds for convenience
+                req.user.departmentIds = departmentIds;
+            }
         } else {
             req.managerDepartmentIds = null;
         }

@@ -8,10 +8,11 @@ import { SessionExpiredModal } from './shared/SessionExpiredModal'
 import { SessionExpiringWarning } from './shared/SessionExpiringWarning'
 import Sidebar from './hr-sidebar'
 import TopBar from './hr-topbar'
+import { GuestBanner } from './shared/GuestBanner'
 import { GlobalLoading } from '@/components/ui/GlobalLoading'
 
 export function HRLayout({ children }: { children: React.ReactNode }) {
-    const { isLoading, isAuthenticated } = useAuth('HR')
+    const { isLoading, isAuthenticated, employee } = useAuth('HR')
     useInactivityTimeout()
     useTokenRefresh()
     const [isMobileOpen, setIsMobileOpen] = useState(false)
@@ -27,10 +28,13 @@ export function HRLayout({ children }: { children: React.ReactNode }) {
         )
     }
 
+    const isGuest = Boolean(employee?.isGuest)
+
     return (
         <div className="h-screen bg-slate-50 overflow-hidden relative">
             <SessionExpiredModal />
             <SessionExpiringWarning />
+            <GuestBanner employee={employee} />
             <a
                 href="#main-content"
                 className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-brand focus:font-bold"
@@ -38,8 +42,8 @@ export function HRLayout({ children }: { children: React.ReactNode }) {
                 Skip to main content
             </a>
 
-            <header className="fixed top-0 left-0 right-0 z-40 h-16">
-                <TopBar setIsMobileOpen={setIsMobileOpen} />
+            <header className={`fixed ${isGuest ? 'top-[40px]' : 'top-0'} left-0 right-0 z-40 h-16 transition-all`}>
+                <TopBar setIsMobileOpen={setIsMobileOpen} isGuest={isGuest} />
             </header>
 
             {/* Mobile Overlay */}
@@ -55,9 +59,10 @@ export function HRLayout({ children }: { children: React.ReactNode }) {
                 setIsMobileOpen={setIsMobileOpen}
                 isCollapsed={isCollapsed}
                 setIsCollapsed={setIsCollapsed}
+                isGuest={isGuest}
             />
 
-            <div className={`h-[calc(100vh-4rem)] mt-16 transition-all duration-300 ${isCollapsed ? 'lg:ml-24' : 'lg:ml-68'}`}>
+            <div className={`${isGuest ? 'h-[calc(100vh-6.5rem)] mt-[104px]' : 'h-[calc(100vh-4rem)] mt-16'} transition-all duration-300 ${isCollapsed ? 'lg:ml-24' : 'lg:ml-68'}`}>
                 <main id="main-content" className="h-full overflow-y-auto scrollbar-light p-4 md:p-8">
                     {children}
                 </main>

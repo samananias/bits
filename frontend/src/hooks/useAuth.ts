@@ -5,19 +5,22 @@ import { useRouter } from 'next/navigation'
 import { apiFetch, SessionExpiredError } from '@/lib/api/client'
 
 // Minimal employee shape returned by /api/auth/me
-interface AuthEmployee {
+export interface AuthEmployee {
   id: number
   firstName: string
   lastName: string
   email: string
   role: 'USER' | 'ADMIN' | 'HR' | 'MANAGER'
   needsPasswordChange: boolean
+  isGuest?: boolean
+  guestViewRole?: 'USER' | 'ADMIN' | 'HR' | 'MANAGER'
 }
 
-interface AuthState {
+export interface AuthState {
   isLoading: boolean
   isAuthenticated: boolean
   employee: AuthEmployee | null
+  isGuest: boolean
 }
 
 type Role = 'ADMIN' | 'HR' | 'USER' | 'MANAGER';
@@ -37,22 +40,25 @@ export function useAuth(requiredRole?: Role | Role[]): AuthState {
     isLoading: true,
     isAuthenticated: false,
     employee: null,
+    isGuest: false,
   })
 
   useEffect(() => {
     const verify = async () => {
       try {
         // Use apiFetch so the 401 → refresh → retry logic and the shared
-        // refreshPromise lock are applied here too. This prevents the race
-        // condition where useAuth and page data hooks both try to refresh
-        // the (one-time-use) refresh token simultaneously.
+        // refreshPromise lock are applied here too.
         const data = await apiFetch<{ employee: AuthEmployee }>('/api/auth/me')
         const employee: AuthEmployee = data.employee ?? (data as unknown as AuthEmployee)
 
         if (requiredRole) {
+          const effectiveRole = (employee.isGuest && employee.guestViewRole)
+              ? employee.guestViewRole
+              : employee.role;
+
           const isAllowed = Array.isArray(requiredRole) 
-              ? requiredRole.includes(employee.role)
-              : employee.role === requiredRole;
+              ? requiredRole.includes(effectiveRole)
+              : effectiveRole === requiredRole;
               
           if (!isAllowed) {
             router.replace('/login')
@@ -60,10 +66,15 @@ export function useAuth(requiredRole?: Role | Role[]): AuthState {
           }
         }
 
-        setState({ isLoading: false, isAuthenticated: true, employee })
+        setState({
+          isLoading: false,
+          isAuthenticated: true,
+          employee,
+          isGuest: Boolean(employee.isGuest),
+        })
       } catch (error) {
         if (error instanceof SessionExpiredError) {
-          // All refresh attempts failed — notify any listening UI (Task 7 modal)
+          // All refresh attempts failed — notify listening UI
           window.dispatchEvent(new CustomEvent('session-expired'))
           // Do NOT redirect here, let the modal handle it gracefully
         } else {
