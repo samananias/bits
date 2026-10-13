@@ -22,8 +22,6 @@ interface BaseSidebarProps {
   expandedWidth?: string
   /** Children: the <li> elements for the nav list */
   children: ReactNode
-  /** Whether session is in guest mode */
-  isGuest?: boolean
 }
 
 export function BaseSidebar({
@@ -31,7 +29,6 @@ export function BaseSidebar({
   title, activeIndex, indicatorDeps = [],
   expandedWidth = 'lg:w-63',
   children,
-  isGuest = false,
 }: BaseSidebarProps) {
   const listRef = useRef<HTMLUListElement>(null)
   const [indicator, setIndicator] = useState<{ top: number; height: number } | null>(null)
@@ -92,11 +89,11 @@ export function BaseSidebar({
       fixed z-40 bg-brand flex flex-col transition-all duration-300 ease-in-out
       
       /* Mobile View: Full height, flush to edges */
-      ${isGuest ? 'top-[40px]' : 'top-0'} bottom-0 left-0 rounded-none w-72
+      top-0 bottom-0 left-0 rounded-none w-72
       ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
 
       /* Desktop View: Floating card */
-      ${isGuest ? 'lg:top-[120px]' : 'lg:top-20'} lg:bottom-4 lg:left-4 lg:rounded-[20px] lg:translate-x-0
+      lg:top-20 lg:bottom-4 lg:left-4 lg:rounded-[20px] lg:translate-x-0
       ${collapsed ? 'lg:w-20' : expandedWidth}
     `}>
 

@@ -8,7 +8,7 @@ import { SessionExpiredModal } from './shared/SessionExpiredModal'
 import { SessionExpiringWarning } from './shared/SessionExpiringWarning'
 import { AdminSidebar } from './admin-sidebar'
 import { AdminTopbar } from './admin-topbar'
-import { GuestBanner } from './shared/GuestBanner'
+import { GuestActionNotice } from './shared/GuestActionNotice'
 import { GlobalLoading } from '@/components/ui/GlobalLoading'
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -28,13 +28,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         )
     }
 
-    const isGuest = Boolean(employee?.isGuest)
+    const guestRole = employee?.isGuest ? (employee.guestViewRole ?? employee.role) : undefined
 
     return (
         <div className="h-screen bg-gray-50 overflow-hidden relative">
             <SessionExpiredModal />
             <SessionExpiringWarning />
-            <GuestBanner employee={employee} />
+            {guestRole && <GuestActionNotice />}
             <a
                 href="#main-content"
                 className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-brand focus:font-bold"
@@ -43,7 +43,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </a>
 
             {/* Top Bar - full width, above everything */}
-            <AdminTopbar onMenuClick={() => setSidebarOpen(true)} isGuest={isGuest} />
+            <AdminTopbar onMenuClick={() => setSidebarOpen(true)} guestRole={guestRole} />
 
             {/* Mobile Overlay */}
             {sidebarOpen && (
@@ -59,11 +59,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 isCollapsed={sidebarCollapsed}
                 onClose={() => setSidebarOpen(false)}
                 onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-                isGuest={isGuest}
             />
 
             {/* Main Content Area */}
-            <div className={`transition-all duration-300 bg-gray-50 ${isGuest ? 'h-[calc(100vh-6.5rem)] mt-[104px]' : 'h-[calc(100vh-4rem)] mt-16'} ${sidebarCollapsed ? 'lg:ml-[6rem]' : 'lg:ml-[17rem]'}`}>
+            <div className={`h-[calc(100vh-4rem)] mt-16 transition-all duration-300 bg-gray-50 ${sidebarCollapsed ? 'lg:ml-[6rem]' : 'lg:ml-[17rem]'}`}>
                 <main id="main-content" className="h-full overflow-y-auto scrollbar-light p-4 md:p-6">
                     {children}
                 </main>

@@ -102,9 +102,11 @@ export function useLogin() {
   }
 
   const [isGuestLoading, setIsGuestLoading] = useState(false)
+  const [guestError, setGuestError] = useState<string | null>(null)
 
   const handleGuestLogin = async (role: 'ADMIN' | 'HR' | 'MANAGER' | 'USER' = 'ADMIN') => {
     setIsGuestLoading(true)
+    setGuestError(null)
     setValidationErrors({})
     try {
       const res = await fetch('/api/auth/guest-login', {
@@ -115,9 +117,7 @@ export function useLogin() {
 
       const data = await res.json()
       if (!res.ok) {
-        setValidationErrors({
-          password: data.message || 'Failed to start guest session',
-        })
+        setGuestError(data.message || 'Failed to start guest session')
         setIsGuestLoading(false)
         return
       }
@@ -125,9 +125,7 @@ export function useLogin() {
       setShowLoading(true)
       router.push('/dashboard')
     } catch {
-      setValidationErrors({
-        password: 'Network error starting guest mode. Please check if the server is running.',
-      })
+      setGuestError('Network error starting guest mode. Please check if the server is running.')
       setIsGuestLoading(false)
     }
   }
@@ -147,6 +145,8 @@ export function useLogin() {
     setValidationErrors,
     isLoading,
     isGuestLoading,
+    guestError,
+    setGuestError,
     showLoading,
     handleSubmit,
     handleGuestLogin

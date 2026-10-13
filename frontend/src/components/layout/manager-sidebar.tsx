@@ -12,7 +12,7 @@ import {
 import { BaseSidebar, useSidebarCollapsed } from './shared/BaseSidebar';
 import { SidebarNavItem } from './shared/SidebarNavItem';
 
-function SidebarInner({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsCollapsed, isGuest }: any) {
+function SidebarInner({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsCollapsed }: any) {
   const pathname = usePathname();
   const { collapsed, labelStyle } = useSidebarCollapsed(isCollapsed);
 
@@ -49,7 +49,6 @@ function SidebarInner({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsCollaps
       activeIndex={activeIndex}
       indicatorDeps={[]}
       expandedWidth="lg:w-64"
-      isGuest={isGuest}
     >
       {/* Dashboard */}
       <SidebarNavItem href="/manager/dashboard" label="Dashboard" icon={LayoutDashboard} active={isOnDashboard} collapsed={collapsed} labelStyle={labelStyle} onClick={onClose} />

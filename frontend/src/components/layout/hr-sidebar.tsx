@@ -16,7 +16,7 @@ import { BaseSidebar, useSidebarCollapsed } from './shared/BaseSidebar';
 import { SidebarNavItem } from './shared/SidebarNavItem';
 import { SidebarSubMenu } from './shared/SidebarSubMenu';
 
-function SidebarInner({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsCollapsed, isGuest }: any) {
+function SidebarInner({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsCollapsed }: any) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { collapsed, labelStyle } = useSidebarCollapsed(isCollapsed);
@@ -62,7 +62,6 @@ function SidebarInner({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsCollaps
       activeIndex={activeIndex}
       indicatorDeps={[employeesOpen]}
       expandedWidth="lg:w-63"
-      isGuest={isGuest}
     >
       {/* Dashboard */}
       <SidebarNavItem href="/hr/dashboard" label="Dashboard" icon={LayoutDashboard} active={pathname === '/hr/dashboard'} collapsed={collapsed} labelStyle={labelStyle} onClick={onClose} />

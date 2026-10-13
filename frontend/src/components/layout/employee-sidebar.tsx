@@ -10,10 +10,9 @@ interface EmployeeSidebarProps {
   isCollapsed: boolean
   onClose: () => void
   onToggleCollapse: () => void
-  isGuest?: boolean
 }
 
-export function EmployeeSidebar({ isOpen, isCollapsed, onClose, onToggleCollapse, isGuest }: EmployeeSidebarProps) {
+export function EmployeeSidebar({ isOpen, isCollapsed, onClose, onToggleCollapse }: EmployeeSidebarProps) {
   const pathname = usePathname()
   const { collapsed, labelStyle } = useSidebarCollapsed(isCollapsed)
 
@@ -35,7 +34,6 @@ export function EmployeeSidebar({ isOpen, isCollapsed, onClose, onToggleCollapse
       title="My Portal"
       activeIndex={activeIndex}
       expandedWidth="lg:w-64"
-      isGuest={isGuest}
     >
       {navItems.map((item) => (
         <SidebarNavItem

@@ -14,10 +14,9 @@ interface AdminSidebarProps {
   isCollapsed: boolean
   onClose: () => void
   onToggleCollapse: () => void
-  isGuest?: boolean
 }
 
-export function AdminSidebar({ isOpen, isCollapsed, onClose, onToggleCollapse, isGuest }: AdminSidebarProps) {
+export function AdminSidebar({ isOpen, isCollapsed, onClose, onToggleCollapse }: AdminSidebarProps) {
   const pathname = usePathname()
   const { collapsed, labelStyle } = useSidebarCollapsed(isCollapsed)
 
@@ -79,7 +78,6 @@ export function AdminSidebar({ isOpen, isCollapsed, onClose, onToggleCollapse, i
       activeIndex={activeIndex}
       indicatorDeps={[inactiveOpen, reportsOpen, systemOpen]}
       expandedWidth="lg:w-63"
-      isGuest={isGuest}
     >
       {/* Dashboard */}
       <SidebarNavItem href="/dashboard" label="Dashboard" icon={LayoutDashboard} active={pathname === '/dashboard'} collapsed={collapsed} labelStyle={labelStyle} onClick={onClose} />
