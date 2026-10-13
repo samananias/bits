@@ -32,3 +32,5 @@ oldStructure/
 .kilo/
 
 data/
+.neon
+.agents/

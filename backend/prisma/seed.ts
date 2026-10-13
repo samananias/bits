@@ -139,6 +139,26 @@ async function main() {
     console.log('⚙️ Seeded sync config')
 
     // ──────────────────────────────────────────────
+    // 5.5. Default Simulated Device
+    // ──────────────────────────────────────────────
+    const zkHost = process.env.ZK_HOST || '127.0.0.1';
+    const zkPort = parseInt(process.env.ZK_PORT || '4370');
+    await prisma.device.upsert({
+        where: { ip: zkHost },
+        update: { port: zkPort, isActive: true },
+        create: {
+            name: 'Main Entrance (Simulated)',
+            ip: zkHost,
+            port: zkPort,
+            location: 'Main Lobby',
+            isActive: true,
+            syncEnabled: true,
+            updatedAt: new Date(),
+        }
+    });
+    console.log(`📱 Seeded device: Main Entrance (Simulated) [${zkHost}:${zkPort}]`)
+
+    // ──────────────────────────────────────────────
     // 6. Employees
     // NOTE: zkId 1 is RESERVED for the ZKTeco device SUPER ADMIN — never use it.
     //       Employee zkIds start from 2.
