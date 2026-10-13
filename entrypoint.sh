@@ -12,6 +12,14 @@ ZK_TCP_PORT=${ZK_PORT:-4370} ZK_HTTP_PORT=4371 node dist/index.js &
 SIM_PID=$!
 echo "[Simulator] Running in background (PID: $SIM_PID, TCP: ${ZK_PORT:-4370}, HTTP: 4371)"
 
+# Give simulator 1 second to initialize and verify it did not exit
+sleep 1
+if ! kill -0 $SIM_PID 2>/dev/null; then
+    echo "[Simulator] ERROR: Simulator process $SIM_PID exited prematurely!"
+    exit 1
+fi
+echo "[Simulator] Verified alive and listening on TCP: ${ZK_PORT:-4370}"
+
 # 2. Deploy database migrations
 echo "[Database] Verifying database migrations..."
 cd /app/backend

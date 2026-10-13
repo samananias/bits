@@ -1,9 +1,9 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
 # Install native packages required by node-zklib, sharp, and timezone data
-RUN apk add --no-cache python3 py3-pip tzdata postgresql-client bash curl && \
+RUN apk add --no-cache python3 py3-pip make g++ tzdata postgresql-client bash curl && \
     cp /usr/share/zoneinfo/Asia/Manila /etc/localtime && \
     echo "Asia/Manila" > /etc/timezone
 
