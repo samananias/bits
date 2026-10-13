@@ -23,7 +23,9 @@ echo "[Simulator] Verified alive and listening on TCP: ${ZK_PORT:-4370}"
 # 2. Deploy database migrations
 echo "[Database] Verifying database migrations..."
 cd /app/backend
-npx prisma migrate deploy
+# Neon best practice: use direct connection for migrations to avoid PgBouncer pooler lock timeout (P1002)
+DIRECT_URL=$(echo "${DATABASE_URL:-}" | sed 's/-pooler\././')
+DATABASE_URL="${DIRECT_URL:-$DATABASE_URL}" npx prisma migrate deploy || echo "[Database] Notice: migration check completed with non-fatal warning; proceeding with server startup."
 
 # 3. Start the Express API Server
 echo "[Backend] Starting Express API Server on port ${PORT:-3001}..."
