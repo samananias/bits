@@ -8,7 +8,8 @@ dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 // BACKEND_URL:
 //   LOCAL  → set in root-level .env  (e.g. http://localhost:3001)
 //   DOCKER → set in docker-compose.yml (e.g. http://backend:3001)
-const backendUrl = process.env.BACKEND_URL || "http://localhost:3001";
+const rawBackendUrl = process.env.BACKEND_URL || "http://localhost:3001";
+const backendUrl = rawBackendUrl.replace(/\/api\/?$/, "").replace(/\/+$/, "");
 
 const nextConfig: NextConfig = {
   turbopack: {

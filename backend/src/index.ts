@@ -16,8 +16,8 @@ process.on('uncaughtException', (error) => {
   // which causes "Unexpected token I" parse errors. Log and continue instead.
 });
 
-app.listen(port, () => {
-  console.log(`Backend server running on port ${port}`);
+app.listen(Number(port), '0.0.0.0', () => {
+  console.log(`Backend server running on port ${port} (0.0.0.0)`);
 
   // Run startup repair for missing checkouts
   repairMissingCheckouts();
