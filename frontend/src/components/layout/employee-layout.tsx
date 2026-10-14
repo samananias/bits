@@ -15,7 +15,7 @@ import { GlobalLoading } from '@/components/ui/GlobalLoading'
 export function EmployeeLayout({ children }: { children: React.ReactNode }) {
     const { employee, isLoading, isAuthenticated } = useAuth('USER')
     useInactivityTimeout()
-    useTokenRefresh()
+    useTokenRefresh(Boolean(employee?.isGuest))
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
     const pathname = usePathname()

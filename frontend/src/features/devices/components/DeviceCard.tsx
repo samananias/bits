@@ -7,6 +7,28 @@ import { formatDistanceToNow, format } from 'date-fns'
 import { Device } from './DeviceConfigureModal'
 import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
+function safeFormatDistanceToNow(val: string | Date | null | undefined, options?: Parameters<typeof formatDistanceToNow>[1]): string | null {
+    if (!val) return null
+    try {
+        const d = new Date(val)
+        if (isNaN(d.getTime())) return null
+        return formatDistanceToNow(d, options)
+    } catch {
+        return null
+    }
+}
+
+function safeFormatDate(val: string | Date | null | undefined, formatStr: string, fallback = '—'): string {
+    if (!val) return fallback
+    try {
+        const d = new Date(val)
+        if (isNaN(d.getTime())) return fallback
+        return format(d, formatStr)
+    } catch {
+        return fallback
+    }
+}
+
 interface DeviceCardProps {
     device: Device;
     testResult?: { success: boolean; message: string; info?: any };
@@ -33,6 +55,8 @@ export function DeviceCard({
     onDeleteClick
 }: DeviceCardProps) {
     const { isGuest, tooltip } = useGuestReadOnly()
+    const lastPolledDist = safeFormatDistanceToNow(device.lastPolledAt)
+    const lastSyncedDist = safeFormatDistanceToNow(device.lastSyncedAt, { addSuffix: true })
     return (
         <Card className="bg-card border-border overflow-hidden">
             {/* Card Header */}
@@ -54,7 +78,7 @@ export function DeviceCard({
                                     : 'bg-secondary/50 text-muted-foreground border-border'
                                     }`}
                             >
-                                {device.isActive ? '● Online' : `○ Offline${device.lastPolledAt ? ` (${formatDistanceToNow(new Date(device.lastPolledAt))} ago)` : ''}`}
+                                {device.isActive ? '● Online' : `○ Offline${lastPolledDist ? ` (${lastPolledDist} ago)` : ''}`}
                             </Badge>
                             <Badge
                                 variant="outline"
@@ -134,10 +158,10 @@ export function DeviceCard({
                                 <div className={`w-1.5 h-1.5 rounded-full ${device.lastSyncStatus === 'SUCCESS' ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.4)]' : 'bg-red-500 animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.6)]'}`} title={device.lastSyncStatus === 'SUCCESS' ? 'Success' : device.lastSyncError || 'Failed'} />
                             )}
                         </div>
-                        {device.lastSyncedAt ? (
+                        {device.lastSyncedAt && lastSyncedDist ? (
                             <div className="mt-0.5">
-                                <span className="text-xs font-bold text-foreground tracking-tight truncate leading-none block" title={format(new Date(device.lastSyncedAt), 'MMM d, p')}>
-                                    {formatDistanceToNow(new Date(device.lastSyncedAt), { addSuffix: true }).replace('about ', '')}
+                                <span className="text-xs font-bold text-foreground tracking-tight truncate leading-none block" title={safeFormatDate(device.lastSyncedAt, 'MMM d, p')}>
+                                    {lastSyncedDist.replace('about ', '')}
                                 </span>
                             </div>
                         ) : (

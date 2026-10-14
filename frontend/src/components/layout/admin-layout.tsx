@@ -14,7 +14,7 @@ import { GlobalLoading } from '@/components/ui/GlobalLoading'
 export function AdminLayout({ children }: { children: React.ReactNode }) {
     const { isLoading, isAuthenticated, employee } = useAuth('ADMIN')
     useInactivityTimeout()
-    useTokenRefresh()
+    useTokenRefresh(Boolean(employee?.isGuest))
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 

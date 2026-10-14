@@ -1,6 +1,7 @@
 import React from 'react';
 import { Download, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 import { EmployeeImportModal } from './EmployeeImportModal';
 import { EmployeeAddModal } from './EmployeeAddModal';
 
@@ -24,6 +25,8 @@ export function EmployeePageHeader({
   departments, branches, companies, shifts, onImportComplete,
   isAddOpen, setIsAddOpen, onRegisterEmployee,
 }: EmployeePageHeaderProps) {
+  const { isGuest, tooltip } = useGuestReadOnly();
+
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
       <div>
@@ -42,9 +45,11 @@ export function EmployeePageHeader({
         {statusFilter === 'Active' && (
           <Button
             variant="outline"
-            className="flex-1 sm:flex-none border-border text-foreground hover:bg-red-700 hover:text-white gap-2 transition-all active:scale-95"
-            disabled={isExporting}
-            onClick={onExport}
+            className="flex-1 sm:flex-none border-border text-foreground hover:bg-red-700 hover:text-white gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-foreground"
+            disabled={isExporting || isGuest}
+            aria-disabled={isGuest}
+            title={isGuest ? tooltip : undefined}
+            onClick={isGuest ? undefined : onExport}
           >
             {isExporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
             Export

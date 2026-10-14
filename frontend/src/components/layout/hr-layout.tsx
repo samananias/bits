@@ -14,7 +14,7 @@ import { GlobalLoading } from '@/components/ui/GlobalLoading'
 export function HRLayout({ children }: { children: React.ReactNode }) {
     const { isLoading, isAuthenticated, employee } = useAuth('HR')
     useInactivityTimeout()
-    useTokenRefresh()
+    useTokenRefresh(Boolean(employee?.isGuest))
     const [isMobileOpen, setIsMobileOpen] = useState(false)
     const [isCollapsed, setIsCollapsed] = useState(false)
 

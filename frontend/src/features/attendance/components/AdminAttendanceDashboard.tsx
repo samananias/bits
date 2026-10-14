@@ -4,6 +4,7 @@ import React, { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Fingerprint, Calendar as CalendarIcon, Download, AlertCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 import { useAttendanceDashboard } from '@/features/attendance/hooks/useAttendanceDashboard';
 import { AttendanceStats } from './AttendanceStats';
 import { AttendanceFilters } from './AttendanceFilters';
@@ -13,6 +14,7 @@ import { CompanyTabs } from './CompanyTabs';
 import ToastContainer from '@/components/ui/ToastContainer';
 
 function AdminAttendanceContent() {
+  const { isGuest, tooltip } = useGuestReadOnly();
   const {
     selectedDate, setSelectedDate,
     searchQuery, setSearchQuery,
@@ -91,8 +93,11 @@ function AdminAttendanceContent() {
             </span>
           </button>
           <button
-            onClick={exportToCSV}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-primary text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95"
+            onClick={isGuest ? undefined : exportToCSV}
+            disabled={isGuest}
+            aria-disabled={isGuest}
+            title={isGuest ? tooltip : undefined}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-primary text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-primary"
           >
             <Download className="w-4 h-4" /> Export
           </button>

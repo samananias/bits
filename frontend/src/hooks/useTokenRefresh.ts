@@ -25,11 +25,19 @@ import { tryRefreshToken } from '@/lib/auth/refreshLock'
 const REFRESH_INTERVAL_MS = 50 * 60 * 1000 // 50 minutes
 const VISIBILITY_JITTER_MAX_MS = 2500       // Spread tab refreshes over 2.5s
 
-export function useTokenRefresh() {
+export function useTokenRefresh(isGuest?: boolean) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const jitterRef   = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
+    // Guest sessions do not possess a refresh token in DB or cookies.
+    // Proactive refresh attempts will fail and risk cookie invalidation.
+    if (isGuest) {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      if (jitterRef.current)   clearTimeout(jitterRef.current)
+      return
+    }
+
     /** Start (or restart) the proactive refresh interval */
     const startInterval = () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
@@ -67,5 +75,5 @@ export function useTokenRefresh() {
       if (jitterRef.current)   clearTimeout(jitterRef.current)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [])
+  }, [isGuest])
 }

@@ -8,6 +8,7 @@ import {
 } from '@/features/reports/lib/formatters';
 import { SortableHeader } from '@/components/ui/SortableHeader';
 import { useHorizontalDragScroll } from '@/hooks/useHorizontalDragScroll';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 import type { TableRowData } from '../hooks/useEmployeeModalData';
 
 export interface AdminDetailViewProps {
@@ -39,6 +40,7 @@ export function AdminDetailView({
     onClose,
     onExport,
 }: AdminDetailViewProps) {
+    const { isGuest, tooltip } = useGuestReadOnly();
     const dragScrollRef = useHorizontalDragScroll();
     return (
         <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-100 flex items-center justify-center p-3 sm:p-4">
@@ -76,8 +78,11 @@ export function AdminDetailView({
                             </div>
                         )}
                         <button
-                            onClick={() => onExport(employee, records, exportSource)}
-                            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all duration-200 shadow-sm active:scale-95 w-full sm:w-auto"
+                            onClick={isGuest ? undefined : () => onExport(employee, records, exportSource)}
+                            disabled={isGuest}
+                            aria-disabled={isGuest}
+                            title={isGuest ? tooltip : undefined}
+                            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all duration-200 shadow-sm active:scale-95 w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-slate-900"
                         >
                             <Download className="w-3.5 h-3.5" />
                             Export Report
