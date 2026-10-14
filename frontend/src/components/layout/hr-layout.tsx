@@ -46,14 +46,6 @@ export function HRLayout({ children }: { children: React.ReactNode }) {
                 <TopBar setIsMobileOpen={setIsMobileOpen} guestRole={guestRole} />
             </header>
 
-            {/* Mobile Overlay */}
-            {isMobileOpen && (
-                <div
-                    className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden transition-opacity"
-                    onClick={() => setIsMobileOpen(false)}
-                />
-            )}
-
             <Sidebar
                 isMobileOpen={isMobileOpen}
                 setIsMobileOpen={setIsMobileOpen}

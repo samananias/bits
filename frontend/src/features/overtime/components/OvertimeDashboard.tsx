@@ -7,12 +7,14 @@ import { Clock, History, UserPlus, Monitor, ArrowLeft } from 'lucide-react';
 import { OvertimeListPage } from './OvertimeListPage';
 import { AssignOvertimeModal } from './AssignOvertimeModal';
 import { OTMonitoringTab } from './OTMonitoringTab';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 
 interface OvertimeDashboardProps {
   role: 'admin' | 'hr' | 'manager';
 }
 
 export function OvertimeDashboard({ role }: OvertimeDashboardProps) {
+  const { isGuest, tooltip } = useGuestReadOnly();
   const router = useRouter();
   const searchParams = useSearchParams();
   const canReview = role === 'manager' || role === 'admin';
@@ -80,8 +82,11 @@ export function OvertimeDashboard({ role }: OvertimeDashboardProps) {
           {/* Action Button: Assign Overtime (Only for admin/manager) — desktop only inline */}
           {canReview && (
             <button
-              onClick={() => setIsAssignModalOpen(true)}
-              className="hidden sm:flex relative z-10 h-10 px-4 rounded-2xl text-sm font-bold transition-all duration-200 items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white shadow-sm shadow-red-500/20 hover:shadow-md hover:shadow-red-500/30 transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shrink-0"
+              disabled={isGuest}
+              aria-disabled={isGuest}
+              onClick={() => !isGuest && setIsAssignModalOpen(true)}
+              title={isGuest ? tooltip : undefined}
+              className={isGuest ? "hidden sm:flex relative z-10 h-10 px-4 rounded-2xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 items-center justify-center gap-2 shrink-0" : "hidden sm:flex relative z-10 h-10 px-4 rounded-2xl text-sm font-bold transition-all duration-200 items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white shadow-sm shadow-red-500/20 hover:shadow-md hover:shadow-red-500/30 transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shrink-0"}
             >
               <UserPlus size={15} />
               Assign Overtime
@@ -92,8 +97,11 @@ export function OvertimeDashboard({ role }: OvertimeDashboardProps) {
         {/* Mobile-only Assign button — full width below the header text */}
         {canReview && (
           <button
-            onClick={() => setIsAssignModalOpen(true)}
-            className="sm:hidden relative z-10 w-full h-11 rounded-2xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-sm shadow-red-500/20 cursor-pointer"
+            disabled={isGuest}
+            aria-disabled={isGuest}
+            onClick={() => !isGuest && setIsAssignModalOpen(true)}
+            title={isGuest ? tooltip : undefined}
+            className={isGuest ? "sm:hidden relative z-10 w-full h-11 rounded-2xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 flex items-center justify-center gap-2" : "sm:hidden relative z-10 w-full h-11 rounded-2xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-sm shadow-red-500/20 cursor-pointer"}
           >
             <UserPlus size={16} />
             Assign Overtime

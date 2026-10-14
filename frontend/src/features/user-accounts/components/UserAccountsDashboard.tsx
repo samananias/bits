@@ -9,6 +9,7 @@ import { UserCog, Plus, Search } from 'lucide-react'
 import ToastContainer from '@/components/ui/ToastContainer'
 import { useTableSort } from '@/hooks/useTableSort'
 import { useAuth } from '@/hooks/useAuth'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 import { useUserAccounts } from '../hooks/useUserAccounts'
 import { UserAccount } from '../utils/user-types'
@@ -19,6 +20,7 @@ import { UserAccountStatusConfirm } from './UserAccountStatusConfirm'
 import { ManagerDepartmentModal } from './ManagerDepartmentModal'
 
 export function UserAccountsDashboard() {
+  const { isGuest, tooltip } = useGuestReadOnly()
   const { employee } = useAuth(['ADMIN', 'MANAGER'])
   const currentUserRole = employee?.role ?? 'ADMIN'
   const { users, loading, fetchUsers, saveUser, toggleStatus, toasts, dismissToast } = useUserAccounts()
@@ -107,9 +109,12 @@ export function UserAccountsDashboard() {
             <p className="text-muted-foreground text-sm mt-0.5">Manage admin and HR user accounts</p>
           </div>
         </div>
-        <Button 
-          onClick={handleOpenAdd} 
-          className="bg-red-600 hover:bg-red-700 gap-2 text-white shadow-lg shadow-red-600/20 w-full sm:w-auto"
+        <Button
+          disabled={isGuest}
+          aria-disabled={isGuest}
+          onClick={handleOpenAdd}
+          title={isGuest ? tooltip : undefined}
+          className={isGuest ? "bg-slate-300 text-slate-500 gap-2 cursor-not-allowed opacity-60 w-full sm:w-auto shadow-none" : "bg-red-600 hover:bg-red-700 gap-2 text-white shadow-lg shadow-red-600/20 w-full sm:w-auto"}
         >
           <Plus className="w-4 h-4" />
           Add User

@@ -5,8 +5,10 @@ import { employeeSelfApi } from '@/lib/api'
 import { ProfilePictureUpload } from './ProfilePictureUpload'
 import { PortalEmployeeProfile } from '../utils/portal-types'
 import { useEmployeeOvertime } from '../hooks/useEmployeeOvertime'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 export function ProfileDashboard() {
+  const { isGuest, tooltip } = useGuestReadOnly()
   const {
     loading,
     profile,
@@ -131,13 +133,16 @@ export function ProfileDashboard() {
                  <ProfilePictureUpload
                    currentUrl={profile.profilePicture || null}
                    initials={initials}
+                   readonly={isGuest}
                    onUpload={async (file) => {
+                     if (isGuest) return
                      const res = await employeeSelfApi.uploadProfilePicture(file)
                      if (res.success && res.profilePicture && profile) {
                        setProfile({ ...profile, profilePicture: res.profilePicture })
                      }
                    }}
                    onDelete={async () => {
+                     if (isGuest) return
                      const res = await employeeSelfApi.deleteProfilePicture()
                      if (res.success && profile) {
                        setProfile({ ...profile, profilePicture: null })
@@ -198,7 +203,7 @@ export function ProfileDashboard() {
                  <KeyRound className="w-4 h-4 text-amber-500" /> Change Password
                </h3>
                
-               <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
+               <form onSubmit={isGuest ? (e) => e.preventDefault() : handleChangePassword} className="flex flex-col gap-4">
                  <div>
                    <label className="block text-xs font-bold text-slate-600 mb-1.5">Current Password</label>
                    <div className="relative">
@@ -273,8 +278,10 @@ export function ProfileDashboard() {
                  <div className="mt-2 text-right">
                    <button
                      type="submit"
-                     disabled={passLoading}
-                     className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-6 rounded-xl transition-colors disabled:opacity-50"
+                     disabled={passLoading || isGuest}
+                     aria-disabled={isGuest}
+                     title={isGuest ? tooltip : undefined}
+                     className={isGuest ? "bg-slate-300 text-slate-500 font-bold py-2.5 px-6 rounded-xl cursor-not-allowed opacity-60" : "bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-6 rounded-xl transition-colors disabled:opacity-50"}
                    >
                      {passLoading ? 'Saving...' : 'Save Password'}
                    </button>

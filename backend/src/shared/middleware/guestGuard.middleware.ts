@@ -68,8 +68,10 @@ export const guestGuard = (req: Request, res: Response, next: NextFunction): voi
     const isGuestAllowedAction =
         req.path === '/guest-view' ||
         req.path === '/api/auth/guest-view' ||
+        req.originalUrl?.includes('/api/auth/guest-view') ||
         req.path === '/logout' ||
-        req.path === '/api/auth/logout';
+        req.path === '/api/auth/logout' ||
+        req.originalUrl?.includes('/api/auth/logout');
 
     // 1. Enforce strict read-only mode on mutations
     if (!SAFE_METHODS.includes(req.method) && !isGuestAllowedAction) {

@@ -3,6 +3,7 @@ import { Edit2, Fingerprint, PenLine, AlertTriangle, Trash2, Clock, CreditCard }
 import { fmtHours, formatLate, fmtMins } from '../utils/attendance-formatters'
 import { AttendanceRecord } from '../types'
 import { getStatusBadges } from '../utils/attendance-logic'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface AttendanceMobileCardsProps {
   loading: boolean
@@ -27,6 +28,7 @@ export function AttendanceMobileCards({
   onShiftClick,
   shiftFilter,
 }: AttendanceMobileCardsProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   const [expandedOTRecordId, setExpandedOTRecordId] = useState<string | number | null>(null)
   const isAllShifts = !shiftFilter || shiftFilter === 'All Shifts';
 
@@ -97,12 +99,24 @@ export function AttendanceMobileCards({
                 </span>
               )}
               {handleEditClick && (
-                <button onClick={() => handleEditClick(row)} className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="Edit Record">
+                <button
+                  disabled={isGuest}
+                  aria-disabled={isGuest}
+                  onClick={() => !isGuest && handleEditClick(row)}
+                  className={isGuest ? "p-1.5 text-muted-foreground opacity-40 cursor-not-allowed rounded-lg" : "p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"}
+                  title={isGuest ? tooltip : "Edit Record"}
+                >
                   <Edit2 size={14} />
                 </button>
               )}
               {handleDeleteClick && typeof row.id === 'number' && (
-                <button onClick={() => handleDeleteClick(row)} className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-600/10 rounded-lg transition-all" title="Delete Record">
+                <button
+                  disabled={isGuest}
+                  aria-disabled={isGuest}
+                  onClick={() => !isGuest && handleDeleteClick(row)}
+                  className={isGuest ? "p-1.5 text-muted-foreground opacity-40 cursor-not-allowed rounded-lg" : "p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-600/10 rounded-lg transition-all"}
+                  title={isGuest ? tooltip : "Delete Record"}
+                >
                   <Trash2 size={14} />
                 </button>
               )}

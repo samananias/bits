@@ -3,6 +3,7 @@ import { useOvertimeList } from '../hooks/useOvertimeList';
 import { CheckCircle, XCircle, Search, Clock, Calendar, UserPlus } from 'lucide-react';
 import { DataTablePagination } from '@/components/ui/DataTablePagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 
 interface OvertimeListPageProps {
   role: 'admin' | 'manager' | 'hr';
@@ -13,6 +14,7 @@ interface OvertimeListPageProps {
 }
 
 export function OvertimeListPage({ role, statusFilter, hidePending, departments, refreshKey = 0 }: OvertimeListPageProps) {
+  const { isGuest, tooltip } = useGuestReadOnly();
   const { requests, loading, actionLoading, meta, filters, setFilters, page, setPage, handleReview, handleDelete } = useOvertimeList(role, statusFilter, refreshKey);
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -290,16 +292,20 @@ export function OvertimeListPage({ role, statusFilter, hidePending, departments,
                   {req.status === 'PENDING' && role !== 'hr' && (
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 w-full sm:w-auto mt-4 sm:mt-0">
                       <button
-                        onClick={() => handleReview(req.id, 'APPROVED')}
-                        disabled={actionLoading === req.id}
-                        className="flex-1 sm:flex-none h-10 px-5 bg-emerald-600 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-emerald-600/10 hover:bg-emerald-700 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
+                        disabled={actionLoading === req.id || isGuest}
+                        aria-disabled={isGuest}
+                        onClick={() => !isGuest && handleReview(req.id, 'APPROVED')}
+                        title={isGuest ? tooltip : undefined}
+                        className={isGuest ? "flex-1 sm:flex-none h-10 px-5 bg-slate-300 text-slate-500 rounded-xl text-xs sm:text-sm font-bold cursor-not-allowed opacity-60 flex items-center justify-center gap-2" : "flex-1 sm:flex-none h-10 px-5 bg-emerald-600 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-emerald-600/10 hover:bg-emerald-700 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"}
                       >
                         <CheckCircle size={15} /> Approve
                       </button>
                       <button
-                        onClick={() => setRejectId(req.id)}
-                        disabled={actionLoading === req.id}
-                        className="flex-1 sm:flex-none h-10 px-5 bg-white border border-rose-200 text-rose-600 rounded-xl text-xs sm:text-sm font-bold hover:bg-rose-50 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
+                        disabled={actionLoading === req.id || isGuest}
+                        aria-disabled={isGuest}
+                        onClick={() => !isGuest && setRejectId(req.id)}
+                        title={isGuest ? tooltip : undefined}
+                        className={isGuest ? "flex-1 sm:flex-none h-10 px-5 bg-white border border-slate-200 text-slate-400 rounded-xl text-xs sm:text-sm font-bold cursor-not-allowed opacity-60 flex items-center justify-center gap-2" : "flex-1 sm:flex-none h-10 px-5 bg-white border border-rose-200 text-rose-600 rounded-xl text-xs sm:text-sm font-bold hover:bg-rose-50 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"}
                       >
                         <XCircle size={15} /> Reject
                       </button>

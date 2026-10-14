@@ -1,5 +1,6 @@
 import { MapPin, Building, Edit2, Trash2, Loader2, X as XIcon } from 'lucide-react'
 import type { Branch } from '../types'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface BranchCardsProps {
   branches: Branch[]
@@ -13,6 +14,7 @@ export function BranchCards({
   branches, branchCounts, loading,
   onEditBranch, onDeleteBranch,
 }: BranchCardsProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   return (
     <div>
       <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Branches</h3>
@@ -76,17 +78,21 @@ export function BranchCards({
                     </div>
                   )}
                   <button
-                    onClick={() => onEditBranch(branch)}
-                    title="Edit branch"
-                    className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 sm:text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-all"
+                    disabled={isGuest}
+                    aria-disabled={isGuest}
+                    onClick={() => !isGuest && onEditBranch(branch)}
+                    title={isGuest ? tooltip : "Edit branch"}
+                    className={isGuest ? "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-300 cursor-not-allowed" : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 sm:text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-all"}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   {count === 0 ? (
                     <button
-                      onClick={() => onDeleteBranch(branch)}
-                      title="Remove branch"
-                      className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 sm:text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                      disabled={isGuest}
+                      aria-disabled={isGuest}
+                      onClick={() => !isGuest && onDeleteBranch(branch)}
+                      title={isGuest ? tooltip : "Remove branch"}
+                      className={isGuest ? "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-300 cursor-not-allowed" : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 sm:text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

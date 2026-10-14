@@ -4,6 +4,7 @@ import React from 'react'
 import { Loader2, CheckCircle2, XCircle, Clock, Trash2, Calendar, User, ArrowRight } from 'lucide-react'
 import { Adjustment } from '@/features/adjustments/types'
 import { formatTime, formatTimestamp, formatDate, empName } from '../hooks/useAdjustmentList'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 export interface AdjustmentMobileCardsProps {
     loading: boolean
@@ -30,6 +31,7 @@ export function AdjustmentMobileCards({
     onCancel,
     onReopen,
 }: AdjustmentMobileCardsProps) {
+    const { isGuest, tooltip } = useGuestReadOnly()
     if (loading) {
         return (
             <div className="px-[20px] py-[64px] text-center flex flex-col items-center gap-[12px]">
@@ -148,8 +150,12 @@ export function AdjustmentMobileCards({
                         <div className="pt-[4px]">
                             {isAdmin && adj.status === 'pending' ? (
                                 <div className="flex gap-[8px]">
-                                    <button onClick={() => onApprove(adj.id)} disabled={actionLoading}
+                                    <button onClick={() => onApprove(adj.id)} disabled={actionLoading || isGuest}
+                                        title={isGuest ? tooltip : undefined}
+                                        aria-disabled={isGuest ? 'true' : undefined}
                                         className={`flex-1 h-[36px] text-white rounded-[6px] text-[12px] font-bold uppercase tracking-[0.5px] transition-all shadow-sm active:scale-[0.95] flex items-center justify-center gap-[6px] ${
+                                            isGuest ? 'opacity-50 cursor-not-allowed ' : ''
+                                        }${
                                             isDelete
                                                 ? 'bg-[#D0021B] hover:bg-[#B00216] shadow-[#D0021B]/10'
                                                 : 'bg-[#2E7D32] hover:bg-[#1B5E20] shadow-[#2E7D32]/10'
@@ -157,14 +163,22 @@ export function AdjustmentMobileCards({
                                         {isDelete ? <Trash2 size={13} /> : <CheckCircle2 size={13} />}
                                         {isDelete ? 'Delete' : 'Approve'}
                                     </button>
-                                    <button onClick={() => onReject(adj.id)} disabled={actionLoading}
-                                        className="flex-1 h-[36px] bg-[#F5F5F5] border border-[#E0E0E0] text-[#757575] rounded-[6px] text-[12px] font-bold uppercase tracking-[0.5px] hover:bg-[#EEEEEE] hover:text-[#212121] transition-all active:scale-[0.95] flex items-center justify-center gap-[6px]">
+                                    <button onClick={() => onReject(adj.id)} disabled={actionLoading || isGuest}
+                                        title={isGuest ? tooltip : undefined}
+                                        aria-disabled={isGuest ? 'true' : undefined}
+                                        className={`flex-1 h-[36px] bg-[#F5F5F5] border border-[#E0E0E0] text-[#757575] rounded-[6px] text-[12px] font-bold uppercase tracking-[0.5px] hover:bg-[#EEEEEE] hover:text-[#212121] transition-all active:scale-[0.95] flex items-center justify-center gap-[6px] ${
+                                            isGuest ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}>
                                         <XCircle size={13} /> Reject
                                     </button>
                                 </div>
                             ) : (!isAdmin && adj.status === 'pending' && adj.submittedById === currentUserId) ? (
-                                <button onClick={() => onCancel(adj.id)} disabled={actionLoading}
-                                    className="w-full h-[36px] bg-white border border-[#E0E0E0] text-[#9E9E9E] rounded-[6px] text-[12px] font-bold uppercase tracking-[0.5px] hover:bg-[#FFEBEE] hover:text-[#C62828] hover:border-[#FFCDD2] transition-all active:scale-[0.95] flex items-center justify-center gap-[6px]">
+                                <button onClick={() => onCancel(adj.id)} disabled={actionLoading || isGuest}
+                                    title={isGuest ? tooltip : undefined}
+                                    aria-disabled={isGuest ? 'true' : undefined}
+                                    className={`w-full h-[36px] bg-white border border-[#E0E0E0] text-[#9E9E9E] rounded-[6px] text-[12px] font-bold uppercase tracking-[0.5px] hover:bg-[#FFEBEE] hover:text-[#C62828] hover:border-[#FFCDD2] transition-all active:scale-[0.95] flex items-center justify-center gap-[6px] ${
+                                        isGuest ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}>
                                     <XCircle size={13} /> Cancel Request
                                 </button>
                             ) : (
@@ -182,8 +196,12 @@ export function AdjustmentMobileCards({
                                         </div>
                                     )}
                                     {role === 'admin' && adj.status !== 'pending' && onReopen && (
-                                        <button onClick={() => onReopen(adj.id)} disabled={actionLoading}
-                                            className="mt-[6px] w-full h-[28px] bg-white border border-[#E0E0E0] text-[#1565C0] rounded-[4px] text-[11px] font-bold uppercase tracking-[0.5px] hover:bg-[#E3F2FD] hover:border-[#BBDEFB] transition-all active:scale-[0.95]">
+                                        <button onClick={() => onReopen(adj.id)} disabled={actionLoading || isGuest}
+                                            title={isGuest ? tooltip : undefined}
+                                            aria-disabled={isGuest ? 'true' : undefined}
+                                            className={`mt-[6px] w-full h-[28px] bg-white border border-[#E0E0E0] text-[#1565C0] rounded-[4px] text-[11px] font-bold uppercase tracking-[0.5px] hover:bg-[#E3F2FD] hover:border-[#BBDEFB] transition-all active:scale-[0.95] ${
+                                                isGuest ? 'opacity-50 cursor-not-allowed' : ''
+                                            }`}>
                                             Reopen Request
                                         </button>
                                     )}

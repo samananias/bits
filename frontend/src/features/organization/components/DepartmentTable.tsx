@@ -2,6 +2,7 @@ import { Users, Edit2, Trash2 } from 'lucide-react'
 import { SortableHeader } from '@/components/ui/SortableHeader'
 import type { Department } from '../types'
 import { getColor, getInitials } from '../types'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface DepartmentTableProps {
   paginatedDepts: Department[]
@@ -22,6 +23,7 @@ export function DepartmentTable({
   sortKey, sortOrder, handleSort,
   onEditDept, onDeleteDept,
 }: DepartmentTableProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div
@@ -69,17 +71,21 @@ export function DepartmentTable({
                   <td className="px-6 py-4">
                     <div className="flex gap-1">
                       <button
-                        onClick={() => onEditDept(dept)}
-                        title="Edit department"
-                        className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90"
+                        disabled={isGuest}
+                        aria-disabled={isGuest}
+                        onClick={() => !isGuest && onEditDept(dept)}
+                        title={isGuest ? tooltip : "Edit department"}
+                        className={isGuest ? "p-2.5 text-slate-400 opacity-40 cursor-not-allowed rounded-xl" : "p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90"}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       {count === 0 ? (
                         <button
-                          onClick={() => onDeleteDept(dept)}
-                          title="Remove department"
-                          className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-90"
+                          disabled={isGuest}
+                          aria-disabled={isGuest}
+                          onClick={() => !isGuest && onDeleteDept(dept)}
+                          title={isGuest ? tooltip : "Remove department"}
+                          className={isGuest ? "p-2.5 text-slate-400 opacity-40 cursor-not-allowed rounded-xl" : "p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-90"}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

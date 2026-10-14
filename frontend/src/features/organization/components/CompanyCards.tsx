@@ -1,5 +1,6 @@
 import { Building, MapPin, Edit2, Trash2, Loader2 } from 'lucide-react'
 import type { Company } from '../types'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface CompanyCardsProps {
   companies: Company[]
@@ -12,6 +13,7 @@ export function CompanyCards({
   companies, loading,
   onEditCompany, onDeleteCompany,
 }: CompanyCardsProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   return (
     <div>
       <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Companies</h3>
@@ -46,17 +48,21 @@ export function CompanyCards({
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => onEditCompany(company)}
-                    title="Edit company"
-                    className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 sm:text-slate-300 hover:text-violet-500 hover:bg-violet-50 transition-all"
+                    disabled={isGuest}
+                    aria-disabled={isGuest}
+                    onClick={() => !isGuest && onEditCompany(company)}
+                    title={isGuest ? tooltip : "Edit company"}
+                    className={isGuest ? "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-300 cursor-not-allowed" : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 sm:text-slate-300 hover:text-violet-500 hover:bg-violet-50 transition-all"}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   {branchCount === 0 ? (
                     <button
-                      onClick={() => onDeleteCompany(company)}
-                      title="Remove company"
-                      className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 sm:text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                      disabled={isGuest}
+                      aria-disabled={isGuest}
+                      onClick={() => !isGuest && onDeleteCompany(company)}
+                      title={isGuest ? tooltip : "Remove company"}
+                      className={isGuest ? "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-300 cursor-not-allowed" : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 sm:text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2, X, CalendarDays, Star, Flag, Globe, MapPin } from 'lucide-react';
 import { useHolidays, Holiday } from '../hooks/useHolidays';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 
 interface HolidayFormData {
     name: string;
@@ -16,6 +17,7 @@ interface HolidayFormData {
 const emptyForm: HolidayFormData = { name: '', date: '', description: '', type: 'REGULAR', branchIds: [], isNational: true };
 
 export function HolidayManagement({ role }: { role: 'admin' | 'hr' | 'user' | 'manager' }) {
+    const { isGuest, tooltip } = useGuestReadOnly();
     const isAdmin = role === 'admin' || role === 'hr';
     const [viewYear, setViewYear] = useState(new Date().getFullYear());
     const [viewMonth, setViewMonth] = useState(new Date().getMonth() + 1);
@@ -159,7 +161,13 @@ export function HolidayManagement({ role }: { role: 'admin' | 'hr' | 'user' | 'm
                     </div>
                 </div>
                 {isAdmin && (
-                    <button onClick={() => openCreate()} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95">
+                    <button
+                        disabled={isGuest}
+                        aria-disabled={isGuest}
+                        onClick={() => !isGuest && openCreate()}
+                        title={isGuest ? tooltip : undefined}
+                        className={isGuest ? "flex items-center gap-2 px-4 py-2.5 bg-slate-300 text-slate-500 rounded-xl text-xs font-bold cursor-not-allowed opacity-60" : "flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"}
+                    >
                         <Plus className="w-4 h-4" /> Add Holiday
                     </button>
                 )}
@@ -200,7 +208,7 @@ export function HolidayManagement({ role }: { role: 'admin' | 'hr' | 'user' | 'm
                                         key={i}
                                         onClick={() => {
                                             if (holiday) setSelectedHoliday(holiday);
-                                            else if (isAdmin && day.inMonth) openCreate(dateStr);
+                                            else if (isAdmin && !isGuest && day.inMonth) openCreate(dateStr);
                                         }}
                                         className={`relative min-h-[80px] p-2 border-b border-r border-border/50 transition-all cursor-pointer group ${!day.inMonth ? 'bg-secondary/20 opacity-40' : 'hover:bg-secondary/30'
                                             } ${isToday ? 'ring-1 ring-inset ring-indigo-500/30 bg-indigo-500/5' : ''}`}
@@ -225,7 +233,7 @@ export function HolidayManagement({ role }: { role: 'admin' | 'hr' | 'user' | 'm
                                                 </div>
                                             </>
                                         )}
-                                        {isAdmin && !holiday && day.inMonth && (
+                                        {isAdmin && !isGuest && !holiday && day.inMonth && (
                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Plus className="w-4 h-4 text-muted-foreground/40" />
                                             </div>
@@ -280,10 +288,22 @@ export function HolidayManagement({ role }: { role: 'admin' | 'hr' | 'user' | 'm
                             </div>
                             {isAdmin && (
                                 <div className="flex gap-2 pt-2 border-t border-border">
-                                    <button onClick={() => openEdit(selectedHoliday)} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-secondary hover:bg-secondary/80 rounded-lg text-[10px] font-bold text-foreground transition-colors">
+                                    <button
+                                        disabled={isGuest}
+                                        aria-disabled={isGuest}
+                                        onClick={() => !isGuest && openEdit(selectedHoliday)}
+                                        title={isGuest ? tooltip : undefined}
+                                        className={isGuest ? "flex-1 flex items-center justify-center gap-1.5 py-2 bg-secondary/50 opacity-40 cursor-not-allowed rounded-lg text-[10px] font-bold text-foreground" : "flex-1 flex items-center justify-center gap-1.5 py-2 bg-secondary hover:bg-secondary/80 rounded-lg text-[10px] font-bold text-foreground transition-colors"}
+                                    >
                                         <Edit2 className="w-3 h-3" /> Edit
                                     </button>
-                                    <button onClick={() => setDeleteConfirm(selectedHoliday)} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-[10px] font-bold text-red-500 transition-colors">
+                                    <button
+                                        disabled={isGuest}
+                                        aria-disabled={isGuest}
+                                        onClick={() => !isGuest && setDeleteConfirm(selectedHoliday)}
+                                        title={isGuest ? tooltip : undefined}
+                                        className={isGuest ? "flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500/5 opacity-40 cursor-not-allowed rounded-lg text-[10px] font-bold text-red-500" : "flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-[10px] font-bold text-red-500 transition-colors"}
+                                    >
                                         <Trash2 className="w-3 h-3" /> Delete
                                     </button>
                                 </div>

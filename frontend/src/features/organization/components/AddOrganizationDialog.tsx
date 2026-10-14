@@ -1,6 +1,7 @@
 import { Plus, Building2, MapPin, Building, X as XIcon, Loader2, Layers, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 import type { Department, Section } from '../types'
 
 interface AddOrganizationDialogProps {
@@ -34,6 +35,7 @@ export function AddOrganizationDialog({
   onAdd,
   sections = [], newDeptSectionIds = [], setNewDeptSectionIds,
 }: AddOrganizationDialogProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   const toggleDeptSection = (sectionId: number) => {
     if (!setNewDeptSectionIds) return
     if (newDeptSectionIds.includes(sectionId)) {
@@ -43,9 +45,14 @@ export function AddOrganizationDialog({
     }
   }
   return (
-    <Dialog open={isAddOpen} onOpenChange={v => { setIsAddOpen(v); if (!v) { setNewName(''); setNewAddress?.(''); setNewSectionDeptId?.(''); setNewDeptSectionIds?.([]); setAddError(null) } }}>
+    <Dialog open={isAddOpen} onOpenChange={v => { if (isGuest) return; setIsAddOpen(v); if (!v) { setNewName(''); setNewAddress?.(''); setNewSectionDeptId?.(''); setNewDeptSectionIds?.([]); setAddError(null) } }}>
       <DialogTrigger asChild>
-        <Button className="bg-red-600 hover:bg-red-700 gap-2 text-white shadow-lg shadow-red-600/20">
+        <Button
+          disabled={isGuest}
+          aria-disabled={isGuest}
+          title={isGuest ? tooltip : undefined}
+          className={isGuest ? "bg-slate-300 text-slate-500 gap-2 cursor-not-allowed opacity-60 shadow-none" : "bg-red-600 hover:bg-red-700 gap-2 text-white shadow-lg shadow-red-600/20"}
+        >
           <Plus className="w-4 h-4" />
           Add New
         </Button>

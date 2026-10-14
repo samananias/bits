@@ -109,8 +109,8 @@ export function GuestModeMenu({ role }: GuestModeMenuProps) {
         body: JSON.stringify({ role: target.id }),
       })
       if (res.ok) {
-        // Full reload so the new guest cookie and role-specific layout are applied cleanly
-        window.location.href = target.path
+        // Clean navigation so the new guest cookie and role-specific layout are applied cleanly
+        window.location.replace(target.path)
         return
       }
       console.error('Failed to switch guest view role')
