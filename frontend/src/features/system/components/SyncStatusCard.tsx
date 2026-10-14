@@ -9,6 +9,7 @@ import { SyncResultModal } from './SyncResultModal';
 import { ClearLogsDialog } from './ClearLogsDialog';
 import { SyncConfirmDialog, SyncActionType } from './SyncConfirmDialog';
 import { useState } from 'react';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 
 import { SyncStatus } from '../types';
 
@@ -24,6 +25,7 @@ function Skeleton({ className }: { className?: string }) {
 }
 
 export function SyncStatusCard({ status, loading, onStatusRefresh }: SyncStatusCardProps) {
+    const { isGuest, tooltip } = useGuestReadOnly();
     const [showClearLogsModal, setShowClearLogsModal] = useState(false);
     const [syncActionType, setSyncActionType] = useState<SyncActionType>(null);
     const {
@@ -91,8 +93,9 @@ export function SyncStatusCard({ status, loading, onStatusRefresh }: SyncStatusC
                         <Switch
                             checked={status.globalSyncEnabled}
                             onCheckedChange={handleToggle}
-                            disabled={toggling}
-                            className={toggling ? 'opacity-50 cursor-not-allowed' : ''}
+                            disabled={toggling || isGuest}
+                            title={isGuest ? tooltip : undefined}
+                            className={toggling || isGuest ? 'opacity-50 cursor-not-allowed' : ''}
                             aria-label="Toggle Global Sync"
                         />
                     </div>

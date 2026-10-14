@@ -4,6 +4,7 @@ import { Activity, Clock, HeartPulse, Play, Timer, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 
 import { SyncStatus } from '../types';
 
@@ -29,6 +30,7 @@ export function SyncStatsGrid({
     status, syncing, syncingTime, clearingLogs,
     onManualSync, onManualTimeSync, onManualClearLogs,
 }: SyncStatsGridProps) {
+    const { isGuest, tooltip } = useGuestReadOnly();
     return (
         <div className="flex flex-col lg:flex-row gap-5 items-stretch">
             {/* ── Stats Cards ───────────────────────────────────── */}
@@ -117,8 +119,10 @@ export function SyncStatsGrid({
             <div className="flex flex-col sm:grid sm:grid-cols-3 lg:flex lg:flex-col gap-2.5 w-full lg:w-48 shrink-0">
                 <Button
                     onClick={onManualSync}
-                    disabled={syncing || syncingTime || !status.globalSyncEnabled}
-                    className="h-10 text-xs font-black shadow-sm"
+                    disabled={syncing || syncingTime || !status.globalSyncEnabled || isGuest}
+                    title={isGuest ? tooltip : undefined}
+                    aria-disabled={isGuest ? 'true' : undefined}
+                    className={`h-10 text-xs font-black shadow-sm ${isGuest ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     {syncing ? (
                         <><Timer className="h-4 w-4 mr-2 animate-spin shrink-0" /> Syncing...</>
@@ -128,9 +132,11 @@ export function SyncStatsGrid({
                 </Button>
                 <Button
                     onClick={onManualTimeSync}
-                    disabled={syncingTime || syncing || clearingLogs || !status.globalSyncEnabled}
+                    disabled={syncingTime || syncing || clearingLogs || !status.globalSyncEnabled || isGuest}
+                    title={isGuest ? tooltip : undefined}
+                    aria-disabled={isGuest ? 'true' : undefined}
                     variant="outline"
-                    className="h-10 text-xs font-bold border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm"
+                    className={`h-10 text-xs font-bold border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm ${isGuest ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     {syncingTime ? (
                         <><Timer className="h-4 w-4 mr-2 animate-spin shrink-0" /> Aligning...</>
@@ -140,9 +146,11 @@ export function SyncStatsGrid({
                 </Button>
                 <Button
                     onClick={onManualClearLogs}
-                    disabled={clearingLogs || syncing || syncingTime}
+                    disabled={clearingLogs || syncing || syncingTime || isGuest}
+                    title={isGuest ? tooltip : undefined}
+                    aria-disabled={isGuest ? 'true' : undefined}
                     variant="outline"
-                    className="h-10 text-xs font-bold border-red-200 text-red-650 hover:bg-red-50 hover:border-red-300 shadow-sm transition-colors duration-200"
+                    className={`h-10 text-xs font-bold border-red-200 text-red-650 hover:bg-red-50 hover:border-red-300 shadow-sm transition-colors duration-200 ${isGuest ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     {clearingLogs ? (
                         <><Timer className="h-4 w-4 mr-2 animate-spin shrink-0" /> Clearing...</>

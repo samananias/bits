@@ -1,6 +1,7 @@
 import { Layers, Users, Edit2, Trash2 } from 'lucide-react'
 import type { Section } from '../types'
 import { getColor, getInitials } from '../types'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface SectionCardsProps {
   sections: Section[]
@@ -15,6 +16,7 @@ export function SectionCards({
   onEditSection,
   onDeleteSection,
 }: SectionCardsProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {sections.map((section, index) => {
@@ -30,17 +32,21 @@ export function SectionCards({
           >
             <div className="absolute top-4 right-4 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
               <button
-                onClick={() => onEditSection(section)}
-                className="p-2 rounded-xl text-slate-400 sm:text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-all"
-                title="Edit section"
+                disabled={isGuest}
+                aria-disabled={isGuest}
+                onClick={() => !isGuest && onEditSection(section)}
+                className={isGuest ? "p-2 rounded-xl text-slate-300 opacity-40 cursor-not-allowed" : "p-2 rounded-xl text-slate-400 sm:text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-all"}
+                title={isGuest ? tooltip : "Edit section"}
               >
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
               {count === 0 ? (
                 <button
-                  onClick={() => onDeleteSection(section)}
-                  className="p-2 rounded-xl text-slate-400 sm:text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
-                  title="Remove section"
+                  disabled={isGuest}
+                  aria-disabled={isGuest}
+                  onClick={() => !isGuest && onDeleteSection(section)}
+                  className={isGuest ? "p-2 rounded-xl text-slate-300 opacity-40 cursor-not-allowed" : "p-2 rounded-xl text-slate-400 sm:text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"}
+                  title={isGuest ? tooltip : "Remove section"}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>

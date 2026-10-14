@@ -26,9 +26,10 @@ export async function POST(request: NextRequest) {
 
         if (!res.ok) {
             // If the backend rejects the refresh (e.g. expired or invalid), 
-            // aggressively clear the HttpOnly cookies on the frontend too
-            // so the edge proxy doesn't think the user is still logged in.
-            if (res.status === 401 || res.status === 403) {
+            // clear the HttpOnly cookies on the frontend ONLY if the token was actually invalid or expired.
+            // Do NOT delete auth_token if no refresh token was provided (e.g. Guest Mode or stateless access).
+            const isRevocationOrExpiry = data?.error === 'invalid_refresh_token' || data?.error === 'refresh_token_expired'
+            if (isRevocationOrExpiry) {
                 errorResponse.cookies.delete('auth_token')
                 errorResponse.cookies.delete('refresh_token')
             }

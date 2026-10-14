@@ -5,6 +5,29 @@ import { Button } from '@/components/ui/button'
 import { Wifi, WifiOff, Server, MapPin, ListTodo, Clock, Check, AlertCircle, Loader2, Activity, RefreshCw, Pencil, Trash2 } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import { Device } from './DeviceConfigureModal'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
+
+function safeFormatDistanceToNow(val: string | Date | null | undefined, options?: Parameters<typeof formatDistanceToNow>[1]): string | null {
+    if (!val) return null
+    try {
+        const d = new Date(val)
+        if (isNaN(d.getTime())) return null
+        return formatDistanceToNow(d, options)
+    } catch {
+        return null
+    }
+}
+
+function safeFormatDate(val: string | Date | null | undefined, formatStr: string, fallback = '—'): string {
+    if (!val) return fallback
+    try {
+        const d = new Date(val)
+        if (isNaN(d.getTime())) return fallback
+        return format(d, formatStr)
+    } catch {
+        return fallback
+    }
+}
 
 interface DeviceCardProps {
     device: Device;
@@ -31,6 +54,9 @@ export function DeviceCard({
     onOpenEdit,
     onDeleteClick
 }: DeviceCardProps) {
+    const { isGuest, tooltip } = useGuestReadOnly()
+    const lastPolledDist = safeFormatDistanceToNow(device.lastPolledAt)
+    const lastSyncedDist = safeFormatDistanceToNow(device.lastSyncedAt, { addSuffix: true })
     return (
         <Card className="bg-card border-border overflow-hidden">
             {/* Card Header */}
@@ -52,7 +78,7 @@ export function DeviceCard({
                                     : 'bg-secondary/50 text-muted-foreground border-border'
                                     }`}
                             >
-                                {device.isActive ? '● Online' : `○ Offline${device.lastPolledAt ? ` (${formatDistanceToNow(new Date(device.lastPolledAt))} ago)` : ''}`}
+                                {device.isActive ? '● Online' : `○ Offline${lastPolledDist ? ` (${lastPolledDist} ago)` : ''}`}
                             </Badge>
                             <Badge
                                 variant="outline"
@@ -68,13 +94,14 @@ export function DeviceCard({
                 </div>
                 {/* Sync On/Off Toggle */}
                 <button
-                    onClick={() => onToggleSync(device)}
-                    disabled={isToggling}
-                    title={device.syncEnabled ? 'Disable sync for this device' : 'Enable sync for this device'}
+                    onClick={() => !isGuest && onToggleSync(device)}
+                    disabled={isToggling || isGuest}
+                    aria-disabled={isGuest}
+                    title={isGuest ? tooltip : (device.syncEnabled ? 'Disable sync for this device' : 'Enable sync for this device')}
                     className={`relative flex items-center shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${device.syncEnabled
-                            ? 'bg-primary'
+                            ? (isGuest ? 'bg-primary/50' : 'bg-primary')
                             : 'bg-secondary border border-border'
-                        } ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        } ${isToggling || isGuest ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                     <span className={`inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-200 ${device.syncEnabled ? 'translate-x-6' : 'translate-x-1'
                         }`} />
@@ -131,10 +158,10 @@ export function DeviceCard({
                                 <div className={`w-1.5 h-1.5 rounded-full ${device.lastSyncStatus === 'SUCCESS' ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.4)]' : 'bg-red-500 animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.6)]'}`} title={device.lastSyncStatus === 'SUCCESS' ? 'Success' : device.lastSyncError || 'Failed'} />
                             )}
                         </div>
-                        {device.lastSyncedAt ? (
+                        {device.lastSyncedAt && lastSyncedDist ? (
                             <div className="mt-0.5">
-                                <span className="text-xs font-bold text-foreground tracking-tight truncate leading-none block" title={format(new Date(device.lastSyncedAt), 'MMM d, p')}>
-                                    {formatDistanceToNow(new Date(device.lastSyncedAt), { addSuffix: true }).replace('about ', '')}
+                                <span className="text-xs font-bold text-foreground tracking-tight truncate leading-none block" title={safeFormatDate(device.lastSyncedAt, 'MMM d, p')}>
+                                    {lastSyncedDist.replace('about ', '')}
                                 </span>
                             </div>
                         ) : (
@@ -187,10 +214,11 @@ export function DeviceCard({
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onConfirmReconcile(device)}
-                        disabled={isTesting || isToggling || isReconciling || !device.isActive}
-                        title={!device.isActive ? "Device must be online to reconcile" : ""}
-                        className="flex-1 gap-1.5 border-border text-xs text-primary hover:bg-primary/10 border-primary/20"
+                        onClick={() => !isGuest && onConfirmReconcile(device)}
+                        disabled={isTesting || isToggling || isReconciling || !device.isActive || isGuest}
+                        aria-disabled={isGuest}
+                        title={isGuest ? tooltip : (!device.isActive ? "Device must be online to reconcile" : "")}
+                        className={isGuest ? "flex-1 gap-1.5 border-border text-xs text-slate-400 opacity-40 cursor-not-allowed" : "flex-1 gap-1.5 border-border text-xs text-primary hover:bg-primary/10 border-primary/20"}
                     >
                         {isReconciling
                             ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Queuing...</>
@@ -203,8 +231,11 @@ export function DeviceCard({
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onOpenEdit(device)}
-                        className="flex-1 gap-1.5 border-border text-sm"
+                        disabled={isGuest}
+                        aria-disabled={isGuest}
+                        onClick={() => !isGuest && onOpenEdit(device)}
+                        title={isGuest ? tooltip : undefined}
+                        className={isGuest ? "flex-1 gap-1.5 border-border text-sm text-slate-400 opacity-40 cursor-not-allowed" : "flex-1 gap-1.5 border-border text-sm"}
                     >
                         <Pencil className="w-3.5 h-3.5" />
                         Configure
@@ -214,8 +245,11 @@ export function DeviceCard({
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onDeleteClick(device)}
-                        className="border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-sm px-3 shrink-0"
+                        disabled={isGuest}
+                        aria-disabled={isGuest}
+                        onClick={() => !isGuest && onDeleteClick(device)}
+                        title={isGuest ? tooltip : undefined}
+                        className={isGuest ? "border-border text-slate-400 opacity-40 cursor-not-allowed text-sm px-3 shrink-0" : "border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-sm px-3 shrink-0"}
                     >
                         <Trash2 className="w-3.5 h-3.5" />
                     </Button>

@@ -4,6 +4,7 @@ import { SortableHeader } from '@/components/ui/SortableHeader'
 import { fmtHours, formatLate, fmtMins } from '../utils/attendance-formatters'
 import { AttendanceRecord } from '../types'
 import { getStatusBadges } from '../utils/attendance-logic'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface AttendanceDesktopTableProps {
   loading: boolean
@@ -32,6 +33,7 @@ export function AttendanceDesktopTable({
   onShiftClick,
   shiftFilter,
 }: AttendanceDesktopTableProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   const [expandedOTRecordId, setExpandedOTRecordId] = useState<string | number | null>(null)
 
   const isAllShifts = !shiftFilter || shiftFilter === 'All Shifts'
@@ -352,12 +354,24 @@ export function AttendanceDesktopTable({
                   <td className="px-2 py-3 text-center">
                     <div className="flex items-center justify-center gap-1">
                       {handleEditClick && (
-                        <button onClick={() => handleEditClick(row)} className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="Edit Record">
+                        <button
+                          disabled={isGuest}
+                          aria-disabled={isGuest}
+                          onClick={() => !isGuest && handleEditClick(row)}
+                          className={isGuest ? "p-2 text-muted-foreground opacity-40 cursor-not-allowed rounded-lg" : "p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"}
+                          title={isGuest ? tooltip : "Edit Record"}
+                        >
                           <Edit2 size={16} />
                         </button>
                       )}
                       {handleDeleteClick && typeof row.id === 'number' && (
-                        <button onClick={() => handleDeleteClick(row)} className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-600/10 rounded-lg transition-all" title="Delete Record">
+                        <button
+                          disabled={isGuest}
+                          aria-disabled={isGuest}
+                          onClick={() => !isGuest && handleDeleteClick(row)}
+                          className={isGuest ? "p-2 text-muted-foreground opacity-40 cursor-not-allowed rounded-lg" : "p-2 text-muted-foreground hover:text-red-600 hover:bg-red-600/10 rounded-lg transition-all"}
+                          title={isGuest ? tooltip : "Delete Record"}
+                        >
                           <Trash2 size={16} />
                         </button>
                       )}

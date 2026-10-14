@@ -8,6 +8,7 @@ import {
     Database, Download, Play, RefreshCw, 
     CheckCircle2, AlertCircle, Clock, FileDown
 } from 'lucide-react';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 
 interface BackupFile {
     filename: string;
@@ -21,6 +22,7 @@ interface BackupStatus {
 }
 
 export function DatabaseBackupManagerCard() {
+    const { isGuest, tooltip } = useGuestReadOnly();
     const [data, setData] = useState<BackupStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [backingUp, setBackingUp] = useState(false);
@@ -73,6 +75,7 @@ export function DatabaseBackupManagerCard() {
     };
 
     const handleDownload = (filename: string) => {
+        if (isGuest) return;
         window.open(`/api/system/backups/download/${filename}`, '_blank');
     };
 
@@ -146,8 +149,10 @@ export function DatabaseBackupManagerCard() {
                         variant="default"
                         size="sm"
                         onClick={handleBackupNow}
-                        disabled={backingUp || loading}
-                        className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 font-semibold text-xs transition-colors duration-200"
+                        disabled={backingUp || loading || isGuest}
+                        title={isGuest ? tooltip : undefined}
+                        aria-disabled={isGuest ? 'true' : undefined}
+                        className={`h-8 bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 font-semibold text-xs transition-colors duration-200 ${isGuest ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         <Play className={`h-3.5 w-3.5 ${backingUp ? 'animate-pulse' : ''}`} />
                         {backingUp ? 'Backing Up...' : 'Backup Now'}
@@ -232,8 +237,10 @@ export function DatabaseBackupManagerCard() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => handleDownload(b.filename)}
-                                        className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700 border border-slate-100 bg-slate-50 hover:bg-slate-100 rounded-md shrink-0 flex items-center justify-center"
-                                        title="Download backup file"
+                                        disabled={isGuest}
+                                        aria-disabled={isGuest}
+                                        className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700 border border-slate-100 bg-slate-50 hover:bg-slate-100 rounded-md shrink-0 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title={isGuest ? tooltip : "Download backup file"}
                                     >
                                         <Download className="h-4 w-4" />
                                     </Button>
@@ -263,8 +270,10 @@ export function DatabaseBackupManagerCard() {
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleDownload(b.filename)}
-                                                    className="h-7 w-7 p-0 text-slate-500 hover:text-slate-700 shrink-0"
-                                                    title="Download backup file"
+                                                    disabled={isGuest}
+                                                    aria-disabled={isGuest}
+                                                    className="h-7 w-7 p-0 text-slate-500 hover:text-slate-700 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title={isGuest ? tooltip : "Download backup file"}
                                                 >
                                                     <Download className="h-4 w-4" />
                                                 </Button>

@@ -4,6 +4,7 @@ import { Edit2, Ban, UserCheck, Building2 } from 'lucide-react'
 import { SortableHeader } from '@/components/ui/SortableHeader'
 import { DataTablePagination } from '@/components/ui/DataTablePagination'
 import { UserAccount } from '../utils/user-types'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface UserAccountTableProps {
   loading: boolean
@@ -36,6 +37,7 @@ export function UserAccountTable({
   onAssignDepartments,
   currentUserRole = 'ADMIN',
 }: UserAccountTableProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div
@@ -157,28 +159,34 @@ export function UserAccountTable({
                     ) : (
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => onEdit(user)}
-                          className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-90"
-                          title="Edit user"
+                          disabled={isGuest}
+                          aria-disabled={isGuest}
+                          onClick={() => !isGuest && onEdit(user)}
+                          className={isGuest ? "p-2.5 text-slate-300 opacity-40 cursor-not-allowed rounded-xl" : "p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-90"}
+                          title={isGuest ? tooltip : "Edit user"}
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         {user.role === 'MANAGER' && onAssignDepartments && (
                           <button
-                            onClick={() => onAssignDepartments(user)}
-                            className="p-2.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all active:scale-90"
-                            title="Assign Departments"
+                            disabled={isGuest}
+                            aria-disabled={isGuest}
+                            onClick={() => !isGuest && onAssignDepartments(user)}
+                            className={isGuest ? "p-2.5 text-slate-300 opacity-40 cursor-not-allowed rounded-xl" : "p-2.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all active:scale-90"}
+                            title={isGuest ? tooltip : "Assign Departments"}
                           >
                             <Building2 className="w-4 h-4" />
                           </button>
                         )}
                         <button
-                          onClick={() => onToggleStatus(user)}
-                          className={`p-2.5 rounded-xl transition-all active:scale-90 ${user.status === 'active'
+                          disabled={isGuest}
+                          aria-disabled={isGuest}
+                          onClick={() => !isGuest && onToggleStatus(user)}
+                          className={isGuest ? "p-2.5 rounded-xl opacity-40 cursor-not-allowed text-slate-300" : `p-2.5 rounded-xl transition-all active:scale-90 ${user.status === 'active'
                             ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
                             : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'
                           }`}
-                          title={user.status === 'active' ? 'Deactivate account' : 'Reactivate account'}
+                          title={isGuest ? tooltip : (user.status === 'active' ? 'Deactivate account' : 'Reactivate account')}
                         >
                           {user.status === 'active'
                             ? <Ban className="w-4 h-4" />

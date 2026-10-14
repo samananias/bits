@@ -17,6 +17,7 @@ import { ProfilePictureUpload } from '@/features/employee-portal/components/Prof
 import { employeesApi } from '@/lib/api'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface EmployeeProfilePageProps {
   employeeId: number
@@ -62,6 +63,7 @@ function StatusBadge({ status }: { status: string }) {
 export function EmployeeProfilePage({ employeeId, role }: EmployeeProfilePageProps) {
   const router = useRouter()
   const { toasts, showToast, dismissToast } = useToast()
+  const { isGuest, tooltip } = useGuestReadOnly()
   const { employee, loading, error, refresh } = useEmployeeProfile(employeeId)
   const { departments, branches, shifts, companies } = useEmployees()
 
@@ -155,14 +157,16 @@ export function EmployeeProfilePage({ employeeId, role }: EmployeeProfilePagePro
             <ProfilePictureUpload
               currentUrl={employee.profilePicture || null}
               initials={initials}
-              readonly={role === 'manager'}
+              readonly={role === 'manager' || isGuest}
               onUpload={async (file) => {
+                if (isGuest) return
                 const res = await employeesApi.uploadProfilePicture(employee.id, file)
                 if (res.success) {
                   refresh()
                 }
               }}
               onDelete={async () => {
+                if (isGuest) return
                 const res = await employeesApi.deleteProfilePicture(employee.id)
                 if (res.success) {
                   refresh()
@@ -197,8 +201,11 @@ export function EmployeeProfilePage({ employeeId, role }: EmployeeProfilePagePro
             </div>
             {role !== 'manager' && (
               <button
-                onClick={handleEdit}
-                className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-600/20 hover:bg-red-700 transition-all active:scale-95"
+                disabled={isGuest}
+                aria-disabled={isGuest}
+                onClick={() => !isGuest && handleEdit()}
+                title={isGuest ? tooltip : undefined}
+                className={isGuest ? "shrink-0 flex items-center gap-2 px-4 py-2.5 bg-slate-300 text-slate-500 text-sm font-bold rounded-xl cursor-not-allowed opacity-60" : "shrink-0 flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-600/20 hover:bg-red-700 transition-all active:scale-95"}
               >
                 <Edit2 className="w-4 h-4" />
                 Edit Profile

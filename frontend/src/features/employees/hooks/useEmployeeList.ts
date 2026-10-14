@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/useToast';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 import { useEmployees } from './useEmployees';
 import { formatFullName, Employee } from '../utils/employee-types';
 
@@ -13,6 +14,7 @@ interface UseEmployeeListOptions {
 const ROWS_PER_PAGE = 10;
 
 export function useEmployeeList({ statusFilter = 'Active', role = 'admin' }: UseEmployeeListOptions = {}) {
+  const { isGuest } = useGuestReadOnly();
   const { employees, rawEmployees, departments, sections, branches, filteredBranches, companies, companyNames, shifts, loading, refresh, filters, tableSort, actions } =
     useEmployees({ statusFilter, role });
   const { toasts, showToast, dismissToast } = useToast();
@@ -203,6 +205,10 @@ export function useEmployeeList({ statusFilter = 'Active', role = 'admin' }: Use
   };
 
   const handleExport = async () => {
+    if (isGuest) {
+      showToast('warning', 'Read-Only Mode', 'Workforce data export is disabled in Guest Mode');
+      return;
+    }
     setIsExporting(true);
     try {
       const params = new URLSearchParams();

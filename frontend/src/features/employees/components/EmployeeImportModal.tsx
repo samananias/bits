@@ -27,7 +27,10 @@ const STEP_MAX_WIDTH: Record<string, string> = {
   results: 'sm:max-w-3xl',
 };
 
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
+
 export function EmployeeImportModal({ departments, branches, companies, shifts, onImportComplete }: EmployeeImportModalProps) {
+  const { isGuest, tooltip } = useGuestReadOnly();
   const [isOpen, setIsOpen] = useState(false);
 
   const {
@@ -56,9 +59,15 @@ export function EmployeeImportModal({ departments, branches, companies, shifts, 
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) resetImport(); }}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (isGuest) return; setIsOpen(open); if (!open) resetImport(); }}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="flex-1 sm:flex-none border-border text-foreground hover:bg-red-700 hover:text-white gap-2 transition-all active:scale-95">
+        <Button
+          variant="outline"
+          disabled={isGuest}
+          title={isGuest ? tooltip : undefined}
+          aria-disabled={isGuest}
+          className={`flex-1 sm:flex-none border-border text-foreground hover:bg-red-700 hover:text-white gap-2 transition-all active:scale-95 ${isGuest ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
           <Upload className="w-4 h-4" /> Import
         </Button>
       </DialogTrigger>

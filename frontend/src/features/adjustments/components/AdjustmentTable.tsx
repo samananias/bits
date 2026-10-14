@@ -6,6 +6,7 @@ import { Loader2, CheckCircle2, XCircle, Clock, Trash2, LucideIcon } from 'lucid
 import { SortableHeader } from '@/components/ui/SortableHeader'
 import { Adjustment } from '@/features/adjustments/types'
 import { formatTime, formatTimestamp, formatDate, empName } from '../hooks/useAdjustmentList'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 const statusConfig: Record<string, { label: string; bg: string; text: string; border: string; icon: LucideIcon }> = {
     pending: { label: 'Pending', bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200', icon: Clock },
@@ -47,6 +48,7 @@ export function AdjustmentTable({
     onCancel,
     onReopen,
 }: AdjustmentTableProps) {
+    const { isGuest, tooltip } = useGuestReadOnly()
     return (
         <table className="w-full border-collapse">
             <thead>
@@ -161,8 +163,12 @@ export function AdjustmentTable({
                             <td className="px-[20px] py-[16px] align-top text-center">
                                 {isAdmin && adj.status === 'pending' ? (
                                     <div className="flex items-center justify-center gap-[8px]">
-                                        <button onClick={() => onApprove(adj.id)} disabled={actionLoading}
+                                        <button onClick={() => onApprove(adj.id)} disabled={actionLoading || isGuest}
+                                            title={isGuest ? tooltip : undefined}
+                                            aria-disabled={isGuest ? 'true' : undefined}
                                             className={`h-[32px] px-[12px] text-white rounded-[6px] text-[11px] font-bold uppercase tracking-[0.5px] transition-all shadow-sm active:scale-[0.95] inline-flex items-center gap-[6px] ${
+                                                isGuest ? 'opacity-50 cursor-not-allowed ' : ''
+                                            }${
                                                 isDelete
                                                     ? 'bg-[#D0021B] hover:bg-[#B00216] shadow-[#D0021B]/20'
                                                     : 'bg-[#2E7D32] hover:bg-[#1B5E20] shadow-[#2E7D32]/20'
@@ -170,15 +176,23 @@ export function AdjustmentTable({
                                             {isDelete ? <Trash2 size={12} /> : <CheckCircle2 size={12} />}
                                             {isDelete ? 'Delete' : 'Approve'}
                                         </button>
-                                        <button onClick={() => onReject(adj.id)} disabled={actionLoading}
-                                            className="h-[32px] px-[12px] bg-[#F5F5F5] border border-[#E0E0E0] text-[#757575] rounded-[6px] text-[11px] font-bold uppercase tracking-[0.5px] hover:bg-[#EEEEEE] hover:text-[#212121] transition-all active:scale-[0.95] inline-flex items-center gap-[6px]">
+                                        <button onClick={() => onReject(adj.id)} disabled={actionLoading || isGuest}
+                                            title={isGuest ? tooltip : undefined}
+                                            aria-disabled={isGuest ? 'true' : undefined}
+                                            className={`h-[32px] px-[12px] bg-[#F5F5F5] border border-[#E0E0E0] text-[#757575] rounded-[6px] text-[11px] font-bold uppercase tracking-[0.5px] hover:bg-[#EEEEEE] hover:text-[#212121] transition-all active:scale-[0.95] inline-flex items-center gap-[6px] ${
+                                                isGuest ? 'opacity-50 cursor-not-allowed' : ''
+                                            }`}>
                                             <XCircle size={12} /> Reject
                                         </button>
                                     </div>
                                 ) : (!isAdmin && adj.status === 'pending' && adj.submittedById === currentUserId) ? (
                                     <div className="flex items-center justify-center gap-[8px]">
-                                        <button onClick={() => onCancel(adj.id)} disabled={actionLoading}
-                                            className="h-[32px] px-[12px] bg-white border border-[#E0E0E0] text-[#9E9E9E] rounded-[6px] text-[11px] font-bold uppercase tracking-[0.5px] hover:bg-[#FFEBEE] hover:text-[#C62828] hover:border-[#FFCDD2] transition-all active:scale-[0.95] inline-flex items-center gap-[6px]">
+                                        <button onClick={() => onCancel(adj.id)} disabled={actionLoading || isGuest}
+                                            title={isGuest ? tooltip : undefined}
+                                            aria-disabled={isGuest ? 'true' : undefined}
+                                            className={`h-[32px] px-[12px] bg-white border border-[#E0E0E0] text-[#9E9E9E] rounded-[6px] text-[11px] font-bold uppercase tracking-[0.5px] hover:bg-[#FFEBEE] hover:text-[#C62828] hover:border-[#FFCDD2] transition-all active:scale-[0.95] inline-flex items-center gap-[6px] ${
+                                                isGuest ? 'opacity-50 cursor-not-allowed' : ''
+                                            }`}>
                                             <XCircle size={12} /> Cancel
                                         </button>
                                     </div>
@@ -189,8 +203,12 @@ export function AdjustmentTable({
                                         </span>
                                         {adj.reviewedAt && <span className="text-[11px] text-[#9E9E9E]">{formatTimestamp(adj.reviewedAt)}</span>}
                                         {role === 'admin' && adj.status !== 'pending' && onReopen && (
-                                            <button onClick={() => onReopen(adj.id)} disabled={actionLoading}
-                                                className="mt-[4px] h-[24px] px-[8px] bg-white border border-[#E0E0E0] text-[#1565C0] rounded-[4px] text-[10px] font-bold uppercase tracking-[0.5px] hover:bg-[#E3F2FD] hover:border-[#BBDEFB] transition-all active:scale-[0.95]">
+                                            <button onClick={() => onReopen(adj.id)} disabled={actionLoading || isGuest}
+                                                title={isGuest ? tooltip : undefined}
+                                                aria-disabled={isGuest ? 'true' : undefined}
+                                                className={`mt-[4px] h-[24px] px-[8px] bg-white border border-[#E0E0E0] text-[#1565C0] rounded-[4px] text-[10px] font-bold uppercase tracking-[0.5px] hover:bg-[#E3F2FD] hover:border-[#BBDEFB] transition-all active:scale-[0.95] ${
+                                                    isGuest ? 'opacity-50 cursor-not-allowed' : ''
+                                                }`}>
                                                 Reopen
                                             </button>
                                         )}

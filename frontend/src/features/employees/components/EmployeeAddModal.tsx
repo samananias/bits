@@ -18,7 +18,10 @@ interface EmployeeAddModalProps {
 
 const SUFFIX_OPTIONS = ['', 'Jr.', 'Sr.', 'II', 'III', 'IV', 'V'] as const;
 
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
+
 export function EmployeeAddModal({ departments, branches, companies, shifts, onSave, isOpen, setIsOpen }: EmployeeAddModalProps) {
+  const { isGuest, tooltip } = useGuestReadOnly();
   const [newEmployee, setNewEmployee] = useState({
     employeeNumber: '', firstName: '', lastName: '', middleName: '', suffix: '',
     contactNumber: '', departmentId: '', branchId: '', email: '', hireDate: '', shiftId: '', gender: '', dateOfBirth: '', position: '', sectionId: '', shiftIds: [] as number[]
@@ -134,9 +137,16 @@ export function EmployeeAddModal({ departments, branches, companies, shifts, onS
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) resetForm(); }}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (isGuest) return; setIsOpen(open); if (!open) resetForm(); }}>
       <DialogTrigger asChild>
-        <Button className="flex-1 sm:flex-none bg-primary hover:bg-primary/90 gap-2"><Plus className="w-4 h-4" /> Add Employee</Button>
+        <Button
+          disabled={isGuest}
+          title={isGuest ? tooltip : undefined}
+          aria-disabled={isGuest}
+          className={`flex-1 sm:flex-none bg-primary hover:bg-primary/90 gap-2 ${isGuest ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          <Plus className="w-4 h-4" /> Add Employee
+        </Button>
       </DialogTrigger>
       <DialogContent showCloseButton={false} className="bg-white border-0 max-w-lg p-0 gap-0 flex flex-col rounded-2xl overflow-hidden shadow-xl">
         <div className="bg-red-600 px-6 py-4 flex items-center justify-between shrink-0">

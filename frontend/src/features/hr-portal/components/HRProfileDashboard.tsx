@@ -3,8 +3,10 @@ import { User, Mail, Shield, MapPin, Calendar, Camera, Check, X, Trash2, Phone }
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
 import { useHRProfile } from '../hooks/useHRProfile'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 export function HRProfileDashboard() {
+  const { isGuest, tooltip } = useGuestReadOnly()
   const { toasts, showToast, dismissToast } = useToast()
   const {
     profileImage,
@@ -42,17 +44,20 @@ export function HRProfileDashboard() {
                     </div>
                   )}
                 </div>
-                <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl cursor-pointer">
-                  <Camera size={24} />
-                  <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                </label>
+                {!isGuest && (
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl cursor-pointer">
+                    <Camera size={24} />
+                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                  </label>
+                )}
               </div>
 
               {profileImage && (
                 <button
                   onClick={() => handleClearPhoto(showToast)}
-                  className="p-3 bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-100 rounded-2xl transition-all shadow-sm group"
-                  title="Remove Photo"
+                  disabled={isGuest}
+                  className={`p-3 bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-100 rounded-2xl transition-all shadow-sm group ${isGuest ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title={isGuest ? tooltip : "Remove Photo"}
                 >
                   <Trash2 size={20} className="group-hover:scale-110 transition-transform" />
                 </button>
@@ -62,7 +67,12 @@ export function HRProfileDashboard() {
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-6 py-2 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-800 transition-all active:scale-95"
+                disabled={isGuest}
+                title={isGuest ? tooltip : undefined}
+                aria-disabled={isGuest ? 'true' : undefined}
+                className={`px-6 py-2 bg-red-500 text-white rounded-xl text-sm font-bold transition-all active:scale-95 ${
+                  isGuest ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-800'
+                }`}
               >
                 Edit Profile
               </button>

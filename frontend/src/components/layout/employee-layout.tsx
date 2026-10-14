@@ -15,7 +15,7 @@ import { GlobalLoading } from '@/components/ui/GlobalLoading'
 export function EmployeeLayout({ children }: { children: React.ReactNode }) {
     const { employee, isLoading, isAuthenticated } = useAuth('USER')
     useInactivityTimeout()
-    useTokenRefresh()
+    useTokenRefresh(Boolean(employee?.isGuest))
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
     const pathname = usePathname()
@@ -55,14 +55,6 @@ export function EmployeeLayout({ children }: { children: React.ReactNode }) {
 
             {/* Top Bar - full width, above everything */}
             <EmployeeTopbar onMenuClick={() => setSidebarOpen(true)} guestRole={guestRole} />
-
-            {/* Mobile Overlay */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
 
             {/* Sidebar */}
             <EmployeeSidebar

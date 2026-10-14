@@ -32,6 +32,8 @@ interface EmployeeTableProps {
   onPermanentDelete?: (employee: Employee) => void
 }
 
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
+
 export function EmployeeTable({
   employees, loading, filteredCount, currentPage, totalPages,
   sortKey, sortOrder, onSort, onPageChange,
@@ -41,6 +43,7 @@ export function EmployeeTable({
   pageSize = 10,
   role = 'admin',
 }: EmployeeTableProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   const isInactiveMode = !!(onRestore || onPermanentDelete)
   const basePath = role === 'hr' ? '/hr/employees' : role === 'manager' ? '/manager/employees' : '/employees'
 
@@ -149,16 +152,20 @@ export function EmployeeTable({
                           {role !== 'manager' && (
                             <>
                               <button
-                                onClick={() => onRestore?.(employee)}
-                                title="Restore to Active"
-                                className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all active:scale-90"
+                                disabled={isGuest}
+                                aria-disabled={isGuest}
+                                onClick={() => !isGuest && onRestore?.(employee)}
+                                title={isGuest ? tooltip : "Restore to Active"}
+                                className={isGuest ? "p-2 text-slate-400 opacity-40 cursor-not-allowed rounded-lg" : "p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all active:scale-90"}
                               >
                                 <RotateCcw className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() => onPermanentDelete?.(employee)}
-                                title="Delete Permanently"
-                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-90"
+                                disabled={isGuest}
+                                aria-disabled={isGuest}
+                                onClick={() => !isGuest && onPermanentDelete?.(employee)}
+                                title={isGuest ? tooltip : "Delete Permanently"}
+                                className={isGuest ? "p-2 text-slate-400 opacity-40 cursor-not-allowed rounded-lg" : "p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-90"}
                               >
                                 <UserX className="w-4 h-4" />
                               </button>
@@ -176,7 +183,13 @@ export function EmployeeTable({
                           </Link>
                           {role !== 'manager' && (
                             <>
-                              <button onClick={() => onEdit(employee)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-90" title="Edit employee">
+                              <button 
+                                disabled={isGuest}
+                                aria-disabled={isGuest}
+                                onClick={() => !isGuest && onEdit(employee)} 
+                                className={isGuest ? "p-2 text-slate-400 opacity-40 cursor-not-allowed rounded-lg" : "p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-90"} 
+                                title={isGuest ? tooltip : "Edit employee"}
+                              >
                                 <Edit2 className="w-4 h-4" />
                               </button>
                                   {(() => {
@@ -198,19 +211,30 @@ export function EmployeeTable({
                                     }
 
                                     return (
-                                      <button onClick={() => { onFingerprintOpen(employee.id, `${employee.firstName} ${employee.lastName}`) }}
-                                        className={`p-2 rounded-lg transition-all active:scale-90 ${btnColorClass}`} 
-                                        title={tooltipTitle}>
+                                      <button 
+                                        disabled={isGuest}
+                                        aria-disabled={isGuest}
+                                        onClick={() => { if (!isGuest) onFingerprintOpen(employee.id, `${employee.firstName} ${employee.lastName}`) }}
+                                        className={isGuest ? "p-2 rounded-lg opacity-40 cursor-not-allowed text-slate-400" : `p-2 rounded-lg transition-all active:scale-90 ${btnColorClass}`} 
+                                        title={isGuest ? tooltip : tooltipTitle}>
                                         <Fingerprint className="w-4 h-4" />
                                       </button>
                                     )
                                   })()}
-                              <button onClick={() => { onCardEnrollOpen(employee.id, `${employee.firstName} ${employee.lastName}`, employee.cardNumber || null) }}
-                                className={`p-2 rounded-lg transition-all active:scale-90 ${employee.cardNumber ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
-                                title={employee.cardNumber ? `Badge #${employee.cardNumber}` : 'Enroll RFID Badge'}>
+                              <button 
+                                disabled={isGuest}
+                                aria-disabled={isGuest}
+                                onClick={() => { if (!isGuest) onCardEnrollOpen(employee.id, `${employee.firstName} ${employee.lastName}`, employee.cardNumber || null) }}
+                                className={isGuest ? "p-2 rounded-lg opacity-40 cursor-not-allowed text-slate-400" : `p-2 rounded-lg transition-all active:scale-90 ${employee.cardNumber ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
+                                title={isGuest ? tooltip : (employee.cardNumber ? `Badge #${employee.cardNumber}` : 'Enroll RFID Badge')}>
                                 <CreditCard className="w-4 h-4" />
                               </button>
-                              <button onClick={() => onResetPassword(employee)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-90" title="Reset Password">
+                              <button 
+                                disabled={isGuest}
+                                aria-disabled={isGuest}
+                                onClick={() => !isGuest && onResetPassword(employee)} 
+                                className={isGuest ? "p-2 text-slate-400 opacity-40 cursor-not-allowed rounded-lg" : "p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-90"} 
+                                title={isGuest ? tooltip : "Reset Password"}>
                                 <Key className="w-4 h-4" />
                               </button>
                             </>

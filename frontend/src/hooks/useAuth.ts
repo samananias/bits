@@ -61,6 +61,15 @@ export function useAuth(requiredRole?: Role | Role[]): AuthState {
               : effectiveRole === requiredRole;
               
           if (!isAllowed) {
+            if (employee.isGuest) {
+              const activeRole = employee.guestViewRole ?? employee.role;
+              let targetDashboard = '/dashboard';
+              if (activeRole === 'HR') targetDashboard = '/hr/dashboard';
+              if (activeRole === 'MANAGER') targetDashboard = '/manager/dashboard';
+              if (activeRole === 'USER') targetDashboard = '/employee/dashboard';
+              router.replace(targetDashboard);
+              return;
+            }
             router.replace('/login')
             return
           }

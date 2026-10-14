@@ -7,8 +7,20 @@ import { calculateAttendanceMetrics, formatToPhilippineTime } from '../attendanc
 // Get logged-in manager's assigned departments
 export const getMyDepartments = async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.employeeId) {
+        if (!req.user || (!req.user.isGuest && (req.user.employeeId === undefined || req.user.employeeId === null))) {
             res.status(401).json({ success: false, message: 'Not authenticated' });
+            return;
+        }
+
+        // Fast-path for Guest Mode: return all departments so Manager Dashboard renders populated data
+        if (req.user.isGuest) {
+            const allDepartments = await prisma.department.findMany({
+                select: { id: true, name: true }
+            });
+            res.status(200).json({
+                success: true,
+                departments: allDepartments
+            });
             return;
         }
 
@@ -43,8 +55,45 @@ export const getMyDepartments = async (req: Request, res: Response): Promise<voi
 // Get logged-in employee's own attendance records
 export const getMyAttendance = async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.employeeId) {
+        if (!req.user || (!req.user.isGuest && (req.user.employeeId === undefined || req.user.employeeId === null))) {
             res.status(401).json({ success: false, message: 'Not authenticated' });
+            return;
+        }
+
+        // Fast-path for Guest Mode: return synthetic attendance records so charts and portal widgets populate
+        if (req.user.isGuest) {
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+            const mockRecord = {
+                id: 999901,
+                employeeId: 0,
+                date: new Date(`${todayStr}T00:00:00.000+08:00`),
+                checkInTime: `${todayStr}T08:00:00.000+08:00`,
+                checkOutTime: `${todayStr}T17:00:00.000+08:00`,
+                status: 'present',
+                notes: null,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                checkInDeviceName: 'Entrance Biometrics (Demo)',
+                checkOutDeviceName: 'Exit Biometrics (Demo)',
+                checkInAuthMethod: 'Fingerprint',
+                checkOutAuthMethod: 'Fingerprint',
+                shiftName: 'Regular Day Shift (Demo)',
+                checkInTimePH: '08:00 AM',
+                checkOutTimePH: '05:00 PM',
+                lateMinutes: 0,
+                undertimeMinutes: 0,
+                overtimeMinutes: 0,
+                totalHours: 8,
+                isAnomaly: false,
+                approvedOts: [],
+                minCheckoutTime: null
+            };
+            res.status(200).json({
+                success: true,
+                count: 1,
+                data: [mockRecord],
+                approvedOts: []
+            });
             return;
         }
 
@@ -197,8 +246,28 @@ export const getMyAttendance = async (req: Request, res: Response): Promise<void
 // Get logged-in employee's assigned shift
 export const getMyShift = async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.employeeId) {
+        if (!req.user || (!req.user.isGuest && (req.user.employeeId === undefined || req.user.employeeId === null))) {
             res.status(401).json({ success: false, message: 'Not authenticated' });
+            return;
+        }
+
+        // Fast-path for Guest Mode: return a realistic demo shift
+        if (req.user.isGuest) {
+            const defaultShift = {
+                id: 1,
+                name: 'Regular Day Shift (Demo)',
+                shiftCode: 'REG',
+                startTime: '08:00',
+                endTime: '17:00',
+                breakMinutes: 60,
+                isNightShift: false,
+                workDays: 'Mon,Tue,Wed,Thu,Fri',
+            };
+            res.status(200).json({
+                success: true,
+                shift: defaultShift,
+                shifts: [defaultShift]
+            });
             return;
         }
 
@@ -230,8 +299,36 @@ export const getMyShift = async (req: Request, res: Response): Promise<void> => 
 // Get logged-in employee's profile
 export const getMyProfile = async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.employeeId) {
+        if (!req.user || (!req.user.isGuest && (req.user.employeeId === undefined || req.user.employeeId === null))) {
             res.status(401).json({ success: false, message: 'Not authenticated' });
+            return;
+        }
+
+        // Fast-path for Guest Mode: return demo employee profile
+        if (req.user.isGuest) {
+            res.status(200).json({
+                success: true,
+                profile: {
+                    id: 0,
+                    zkId: null,
+                    firstName: 'Guest',
+                    lastName: 'Visitor',
+                    email: 'guest@bits.demo',
+                    role: req.user.role || 'USER',
+                    departmentId: null,
+                    Department: { name: 'Operations (Demo)' },
+                    position: 'Guest Explorer',
+                    branchId: null,
+                    Branch: { name: 'Main Office (Demo)' },
+                    contactNumber: '0917-000-0000',
+                    employeeNumber: 'GUEST-001',
+                    hireDate: new Date().toISOString(),
+                    employmentStatus: 'ACTIVE',
+                    needsPasswordChange: false,
+                    profilePicture: null,
+                    createdAt: new Date().toISOString(),
+                }
+            });
             return;
         }
 
@@ -325,7 +422,7 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
  * Server-Sent Events endpoint for the logged-in employee's own real-time attendance updates.
  */
 export const streamMyAttendance = async (req: Request, res: Response): Promise<void> => {
-    if (!req.user?.employeeId) {
+    if (!req.user || (!req.user.isGuest && (req.user.employeeId === undefined || req.user.employeeId === null))) {
         res.status(401).end();
         return;
     }

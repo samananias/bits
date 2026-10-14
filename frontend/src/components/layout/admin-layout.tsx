@@ -14,7 +14,7 @@ import { GlobalLoading } from '@/components/ui/GlobalLoading'
 export function AdminLayout({ children }: { children: React.ReactNode }) {
     const { isLoading, isAuthenticated, employee } = useAuth('ADMIN')
     useInactivityTimeout()
-    useTokenRefresh()
+    useTokenRefresh(Boolean(employee?.isGuest))
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
@@ -44,14 +44,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
             {/* Top Bar - full width, above everything */}
             <AdminTopbar onMenuClick={() => setSidebarOpen(true)} guestRole={guestRole} />
-
-            {/* Mobile Overlay */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
 
             {/* Sidebar */}
             <AdminSidebar

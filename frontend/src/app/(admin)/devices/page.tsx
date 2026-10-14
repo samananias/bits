@@ -13,6 +13,7 @@ import { DeviceConfigureModal, Device, FormState } from '@/features/devices/comp
 import { DeviceReconcileModal } from '@/features/devices/components/DeviceReconcileModal'
 import { DeviceDeleteConfirmModal } from '@/features/devices/components/DeviceDeleteConfirmModal'
 import { DeviceCard } from '@/features/devices/components/DeviceCard'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 const EMPTY_FORM: FormState = { name: '', ip: '', port: '4370', location: '' }
 
@@ -46,6 +47,7 @@ interface MinimalEmployee {
 }
 
 export default function DevicesPage() {
+    const { isGuest, tooltip } = useGuestReadOnly()
     const [devices, setDevices] = useState<Device[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -476,7 +478,13 @@ export default function DevicesPage() {
                         <RefreshCw className="w-4 h-4" />
                         <span className="hidden sm:inline">Refresh</span>
                     </Button>
-                    <Button onClick={openAdd} className="bg-primary hover:bg-primary/90 gap-2">
+                    <Button
+                        disabled={isGuest}
+                        aria-disabled={isGuest}
+                        onClick={openAdd}
+                        title={isGuest ? tooltip : undefined}
+                        className={isGuest ? "bg-slate-300 text-slate-500 gap-2 cursor-not-allowed opacity-60" : "bg-primary hover:bg-primary/90 gap-2"}
+                    >
                         <Plus className="w-4 h-4" />
                         Add Device
                     </Button>
@@ -518,7 +526,13 @@ export default function DevicesPage() {
                             <p className="text-base font-semibold text-foreground">No devices configured</p>
                             <p className="text-sm text-muted-foreground mt-1">Add your first ZKTeco biometric device to get started</p>
                         </div>
-                        <Button onClick={openAdd} className="bg-primary gap-2">
+                        <Button
+                            disabled={isGuest}
+                            aria-disabled={isGuest}
+                            onClick={openAdd}
+                            title={isGuest ? tooltip : undefined}
+                            className={isGuest ? "bg-slate-300 text-slate-500 gap-2 cursor-not-allowed opacity-60" : "bg-primary gap-2"}
+                        >
                             <Plus className="w-4 h-4" />
                             Add Device
                         </Button>
@@ -557,7 +571,13 @@ export default function DevicesPage() {
                         </div>
                     </div>
                     <div>
-                        <Button onClick={() => openManageAdmin()} className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
+                        <Button
+                            disabled={isGuest}
+                            aria-disabled={isGuest}
+                            onClick={() => openManageAdmin()}
+                            title={isGuest ? tooltip : undefined}
+                            className={isGuest ? "bg-slate-300 text-slate-500 gap-2 w-full sm:w-auto cursor-not-allowed opacity-60" : "bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto"}
+                        >
                             <Plus className="w-4 h-4" />
                             Manage Administrators
                         </Button>
@@ -624,16 +644,22 @@ export default function DevicesPage() {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => openManageAdmin(admin.employeeId)}
-                                                        className="text-xs font-bold text-primary hover:bg-primary/10"
+                                                        disabled={isGuest}
+                                                        aria-disabled={isGuest}
+                                                        onClick={() => !isGuest && openManageAdmin(admin.employeeId)}
+                                                        title={isGuest ? tooltip : undefined}
+                                                        className={isGuest ? "text-xs font-bold text-slate-400 opacity-40 cursor-not-allowed" : "text-xs font-bold text-primary hover:bg-primary/10"}
                                                     >
                                                         Manage
                                                     </Button>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => handleRemoveAdmin(admin.employeeId, `${admin.firstName} ${admin.lastName}`)}
-                                                        className="text-xs font-bold text-red-500 hover:bg-red-50"
+                                                        disabled={isGuest}
+                                                        aria-disabled={isGuest}
+                                                        onClick={() => !isGuest && handleRemoveAdmin(admin.employeeId, `${admin.firstName} ${admin.lastName}`)}
+                                                        title={isGuest ? tooltip : undefined}
+                                                        className={isGuest ? "text-xs font-bold text-slate-400 opacity-40 cursor-not-allowed" : "text-xs font-bold text-red-500 hover:bg-red-50"}
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5" />
                                                     </Button>
@@ -697,16 +723,22 @@ export default function DevicesPage() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => openManageAdmin(admin.employeeId)}
-                                            className="text-xs font-bold text-primary hover:bg-primary/10 px-3 py-1.5 h-auto"
+                                            disabled={isGuest}
+                                            aria-disabled={isGuest}
+                                            onClick={() => !isGuest && openManageAdmin(admin.employeeId)}
+                                            title={isGuest ? tooltip : undefined}
+                                            className={isGuest ? "text-xs font-bold text-slate-400 opacity-40 cursor-not-allowed px-3 py-1.5 h-auto" : "text-xs font-bold text-primary hover:bg-primary/10 px-3 py-1.5 h-auto"}
                                         >
                                             Manage
                                         </Button>
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => handleRemoveAdmin(admin.employeeId, `${admin.firstName} ${admin.lastName}`)}
-                                            className="text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-1.5 h-auto"
+                                            disabled={isGuest}
+                                            aria-disabled={isGuest}
+                                            onClick={() => !isGuest && handleRemoveAdmin(admin.employeeId, `${admin.firstName} ${admin.lastName}`)}
+                                            title={isGuest ? tooltip : undefined}
+                                            className={isGuest ? "text-xs font-bold text-slate-400 opacity-40 cursor-not-allowed px-3 py-1.5 h-auto" : "text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-1.5 h-auto"}
                                         >
                                             <span className="flex items-center gap-1.5">
                                                 <Trash2 className="w-3.5 h-3.5" />

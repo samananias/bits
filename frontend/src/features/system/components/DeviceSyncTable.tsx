@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { MonitorSmartphone, CloudOff, Wifi } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useState } from 'react';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 
 interface Device {
     id: number;
@@ -31,6 +32,7 @@ function Skeleton({ className }: { className?: string }) {
 }
 
 export function DeviceSyncTable({ devices, loading, onDevicesChange }: DeviceSyncTableProps) {
+    const { isGuest, tooltip } = useGuestReadOnly();
     const { toast } = useToast();
 
     const [togglingId, setTogglingId] = useState<number | null>(null);
@@ -246,7 +248,9 @@ export function DeviceSyncTable({ devices, loading, onDevicesChange }: DeviceSyn
                                         <Switch
                                             checked={device.syncEnabled}
                                             onCheckedChange={() => toggleDeviceSync(device.id, device.syncEnabled)}
-                                            disabled={togglingId === device.id}
+                                            disabled={togglingId === device.id || isGuest}
+                                            title={isGuest ? tooltip : undefined}
+                                            className={isGuest ? 'opacity-50 cursor-not-allowed' : ''}
                                             aria-label={`Toggle sync for ${device.name}`}
                                         />
                                     </td>

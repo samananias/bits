@@ -68,10 +68,27 @@ export const guestGuard = (req: Request, res: Response, next: NextFunction): voi
     const isGuestAllowedAction =
         req.path === '/guest-view' ||
         req.path === '/api/auth/guest-view' ||
+        req.originalUrl?.includes('/api/auth/guest-view') ||
         req.path === '/logout' ||
-        req.path === '/api/auth/logout';
+        req.path === '/api/auth/logout' ||
+        req.originalUrl?.includes('/api/auth/logout');
 
-    // 1. Enforce strict read-only mode on mutations
+    // 1. Block bulk data exfiltration and database backup downloads in Guest Mode
+    const targetUrl = (req.originalUrl || req.url || req.path || '').toLowerCase();
+    const isExfiltrationPath =
+        (targetUrl.includes('/employees/export') && !targetUrl.includes('/export-template')) ||
+        targetUrl.includes('/backups/download');
+
+    if (isExfiltrationPath) {
+        res.status(403).json({
+            success: false,
+            message: 'Exporting workforce data and downloading system backups are disabled in Guest Mode (Read-Only).',
+            error: 'guest_read_only'
+        });
+        return;
+    }
+
+    // 2. Enforce strict read-only mode on mutations
     if (!SAFE_METHODS.includes(req.method) && !isGuestAllowedAction) {
         res.status(403).json({
             success: false,

@@ -14,12 +14,14 @@ import { HealthMonitorConfigSection } from './HealthMonitorConfigSection';
 import { LogMaintenanceConfigSection } from './LogMaintenanceConfigSection';
 import { DatabaseBackupConfigSection } from './DatabaseBackupConfigSection';
 import { DurationInput } from './DurationInput';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 
 function Skeleton({ className }: { className?: string }) {
     return <div className={`animate-pulse bg-slate-200 rounded-lg ${className ?? ''}`} />;
 }
 
 export function SyncConfigForm({ children }: { children?: React.ReactNode }) {
+    const { isGuest, tooltip } = useGuestReadOnly();
     const { config, setConfig, limits, loading, saving, isDirty, showIntervalWarning, setShowIntervalWarning, saveConfig, handleSubmit, handleDiscard } = useSyncConfig();
 
     if (loading) return (
@@ -141,8 +143,10 @@ export function SyncConfigForm({ children }: { children?: React.ReactNode }) {
                             )}
                             <Button 
                                 type="submit" 
-                                disabled={saving || !isDirty} 
-                                className="flex-1 sm:flex-none text-xs font-semibold h-9 px-5 bg-red-600 hover:bg-red-700 text-white flex items-center gap-1.5 transition-colors duration-200"
+                                disabled={saving || !isDirty || isGuest} 
+                                title={isGuest ? tooltip : undefined}
+                                aria-disabled={isGuest ? 'true' : undefined}
+                                className={`flex-1 sm:flex-none text-xs font-semibold h-9 px-5 bg-red-600 hover:bg-red-700 text-white flex items-center gap-1.5 transition-colors duration-200 ${isGuest ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 {saving ? (
                                     'Saving...'

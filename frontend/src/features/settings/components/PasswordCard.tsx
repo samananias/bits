@@ -1,5 +1,6 @@
 import { Lock, Eye, EyeOff } from 'lucide-react'
 import type { PasswordForm, PasswordStrength } from '../types'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface PasswordCardProps {
   passwordForm: PasswordForm
@@ -17,6 +18,7 @@ export function PasswordCard({
   isUpdatingPassword, onChangePassword,
   strength,
 }: PasswordCardProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   return (
     <div className="bg-white border border-slate-200 p-4 sm:p-8 shadow-sm rounded-3xl">
       <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -80,9 +82,11 @@ export function PasswordCard({
         </div>
 
         <button
-          onClick={onChangePassword}
-          disabled={isUpdatingPassword}
-          className="w-full md:w-fit px-8 py-3 bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-800 transition-all active:scale-95 disabled:opacity-50"
+          disabled={isUpdatingPassword || isGuest}
+          aria-disabled={isGuest}
+          onClick={() => !isGuest && onChangePassword()}
+          title={isGuest ? tooltip : undefined}
+          className={isGuest ? "w-full md:w-fit px-8 py-3 bg-slate-300 text-slate-500 rounded-xl text-xs font-black uppercase tracking-widest cursor-not-allowed opacity-60" : "w-full md:w-fit px-8 py-3 bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-800 transition-all active:scale-95 disabled:opacity-50"}
         >
           {isUpdatingPassword ? 'Saving...' : 'Update Password'}
         </button>

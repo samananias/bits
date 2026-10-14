@@ -5,6 +5,7 @@ import {
 import { SortableHeader } from '@/components/ui/SortableHeader'
 import type { Shift } from '../types'
 import { formatTime, calcDuration, calcBreaksDuration } from '../utils/shift-formatters'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface ShiftTableProps {
   paginatedShifts: Shift[]
@@ -22,6 +23,7 @@ export function ShiftTable({
   sortKey, sortOrder, handleSort,
   onEdit, onDelete, isReadOnly,
 }: ShiftTableProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   return (
     <>
       {/* Desktop Table (lg+) */}
@@ -107,10 +109,22 @@ export function ShiftTable({
                 {!isReadOnly && (
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1">
-                      <button onClick={() => onEdit(s)} title="Edit" className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90">
+                      <button
+                        disabled={isGuest}
+                        aria-disabled={isGuest}
+                        onClick={() => !isGuest && onEdit(s)}
+                        title={isGuest ? tooltip : "Edit"}
+                        className={isGuest ? "p-2.5 text-slate-400 opacity-40 cursor-not-allowed rounded-xl" : "p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90"}
+                      >
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => onDelete(s)} title="Delete" className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-90">
+                      <button
+                        disabled={isGuest}
+                        aria-disabled={isGuest}
+                        onClick={() => !isGuest && onDelete(s)}
+                        title={isGuest ? tooltip : "Delete"}
+                        className={isGuest ? "p-2.5 text-slate-400 opacity-40 cursor-not-allowed rounded-xl" : "p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-90"}
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -189,10 +203,22 @@ export function ShiftTable({
                     </div>
                     {!isReadOnly && (
                       <div className="flex items-center gap-0.5">
-                        <button onClick={() => onEdit(s)} title="Edit" className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90">
+                        <button
+                          disabled={isGuest}
+                          aria-disabled={isGuest}
+                          onClick={() => !isGuest && onEdit(s)}
+                          title={isGuest ? tooltip : "Edit"}
+                          className={isGuest ? "p-2 text-slate-400 opacity-40 cursor-not-allowed rounded-xl" : "p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90"}
+                        >
                           <Edit2 size={16} />
                         </button>
-                        <button onClick={() => onDelete(s)} title="Delete" className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-90">
+                        <button
+                          disabled={isGuest}
+                          aria-disabled={isGuest}
+                          onClick={() => !isGuest && onDelete(s)}
+                          title={isGuest ? tooltip : "Delete"}
+                          className={isGuest ? "p-2 text-slate-400 opacity-40 cursor-not-allowed rounded-xl" : "p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-90"}
+                        >
                           <Trash2 size={16} />
                         </button>
                       </div>

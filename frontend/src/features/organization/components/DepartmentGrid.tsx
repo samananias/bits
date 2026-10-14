@@ -1,6 +1,7 @@
 import { Building2, Users, Edit2, Trash2 } from 'lucide-react'
 import type { Department } from '../types'
 import { getColor, getInitials } from '../types'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface DepartmentGridProps {
   paginatedDepts: Department[]
@@ -17,6 +18,7 @@ export function DepartmentGrid({
   currentPage, rowsPerPage, totalCount,
   onEditDept, onDeleteDept,
 }: DepartmentGridProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {paginatedDepts.map((dept, index) => {
@@ -32,17 +34,21 @@ export function DepartmentGrid({
           >
             <div className="absolute top-4 right-4 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
               <button
-                onClick={() => onEditDept(dept)}
-                className="p-2 rounded-xl text-slate-400 sm:text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-all"
-                title="Edit department"
+                disabled={isGuest}
+                aria-disabled={isGuest}
+                onClick={() => !isGuest && onEditDept(dept)}
+                className={isGuest ? "p-2 rounded-xl text-slate-300 opacity-40 cursor-not-allowed" : "p-2 rounded-xl text-slate-400 sm:text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-all"}
+                title={isGuest ? tooltip : "Edit department"}
               >
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
               {count === 0 ? (
                 <button
-                  onClick={() => onDeleteDept(dept)}
-                  className="p-2 rounded-xl text-slate-400 sm:text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
-                  title="Remove department"
+                  disabled={isGuest}
+                  aria-disabled={isGuest}
+                  onClick={() => !isGuest && onDeleteDept(dept)}
+                  className={isGuest ? "p-2 rounded-xl text-slate-300 opacity-40 cursor-not-allowed" : "p-2 rounded-xl text-slate-400 sm:text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"}
+                  title={isGuest ? tooltip : "Remove department"}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>

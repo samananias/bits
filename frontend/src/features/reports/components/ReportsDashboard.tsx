@@ -11,8 +11,10 @@ import { handleExport, handleExportIndividual, handleExportAllCompanies } from '
 import { formatDateShort } from '../lib/formatters';
 import { ReportRow } from '@/types/reports';
 import { useHolidays } from '@/features/holidays/hooks/useHolidays';
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly';
 
 export function ReportsDashboard({ role = 'admin' }: { role?: 'admin' | 'hr' }) {
+  const { isGuest, tooltip } = useGuestReadOnly();
   // Use Asia/Manila for default dates to avoid shifting to previous day
   const [startDate, setStartDate] = useState(() => {
     const now = new Date();
@@ -147,15 +149,21 @@ export function ReportsDashboard({ role = 'admin' }: { role?: 'admin' | 'hr' }) 
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
             onClick={() => handleExport(filteredData, startDate, endDate, role === 'hr' ? 'hr-panel' : 'admin-panel')}
-            className="flex items-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl transition-colors shadow-lg shadow-red-600/20 w-full sm:w-auto justify-center"
+            disabled={isGuest}
+            aria-disabled={isGuest}
+            title={isGuest ? tooltip : undefined}
+            className="flex items-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl transition-colors shadow-lg shadow-red-600/20 w-full sm:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-600"
           >
             <Download className="w-4 h-4" />
             Attendance Report: {formatDateShort(startDate)} –{' '}
             {formatDateShort(endDate)}
           </button>
           <button
-            disabled={exportingAll}
+            disabled={exportingAll || isGuest}
+            aria-disabled={isGuest}
+            title={isGuest ? tooltip : undefined}
             onClick={async () => {
+              if (isGuest) return;
               setExportingAll(true);
               setExportWarning(null);
               try {

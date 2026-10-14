@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Save, Mail, MapPin, Phone } from 'lucide-react'
 import type { UserData } from '../types'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 interface ProfileCardProps {
   userData: UserData
@@ -17,6 +18,7 @@ export function ProfileCard({
   isEditingProfile, setIsEditingProfile,
   isSavingProfile, onSave, onCancelClick,
 }: ProfileCardProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   return (
     <div className="bg-white border border-slate-200 overflow-hidden shadow-sm rounded-3xl">
       <div className="h-32 bg-brand" />
@@ -35,8 +37,11 @@ export function ProfileCard({
           </div>
           {!isEditingProfile ? (
             <button
-              onClick={() => setIsEditingProfile(true)}
-              className="w-full sm:w-auto px-6 py-2.5 border border-slate-400 text-slate-600 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 transition-all text-center"
+              disabled={isGuest}
+              aria-disabled={isGuest}
+              onClick={() => !isGuest && setIsEditingProfile(true)}
+              title={isGuest ? tooltip : undefined}
+              className={isGuest ? "w-full sm:w-auto px-6 py-2.5 border border-slate-200 text-slate-400 rounded-xl text-xs font-bold bg-slate-50 cursor-not-allowed opacity-60 text-center" : "w-full sm:w-auto px-6 py-2.5 border border-slate-400 text-slate-600 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 transition-all text-center"}
             >
               Edit Personal Info
             </button>

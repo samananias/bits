@@ -13,12 +13,14 @@ import { AttendanceTable } from '@/features/attendance/components/AttendanceTabl
 import { AttendanceEditModal } from '@/features/attendance/components/AttendanceEditModal'
 import { CompanyTabs } from '@/features/attendance/components/CompanyTabs'
 import { useAttendanceDashboard } from '@/features/attendance/hooks/useAttendanceDashboard'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 export interface AttendanceDashboardProps {
   role: 'admin' | 'hr'
 }
 
 function AttendanceContent({ role }: AttendanceDashboardProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   const {
     selectedDate, setSelectedDate,
     searchQuery, setSearchQuery,
@@ -97,8 +99,11 @@ function AttendanceContent({ role }: AttendanceDashboardProps) {
             </span>
           </button>
           <button
-            onClick={exportToCSV}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-primary text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95"
+            onClick={isGuest ? undefined : exportToCSV}
+            disabled={isGuest}
+            aria-disabled={isGuest}
+            title={isGuest ? tooltip : undefined}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-primary text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-primary"
           >
             <Download className="w-4 h-4" /> Export
           </button>

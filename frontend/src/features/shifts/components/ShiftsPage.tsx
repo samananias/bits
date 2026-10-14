@@ -4,6 +4,7 @@ import { Plus, Search } from 'lucide-react'
 import { useTableSort } from '@/hooks/useTableSort'
 import { DataTablePagination } from '@/components/ui/DataTablePagination'
 import ToastContainer from '@/components/ui/ToastContainer'
+import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
 import { useShifts } from '../hooks/useShifts'
 import type { Shift } from '../types'
@@ -18,6 +19,7 @@ interface ShiftsPageProps {
 }
 
 export default function ShiftsPage({ role }: ShiftsPageProps) {
+  const { isGuest, tooltip } = useGuestReadOnly()
   const s = useShifts()
 
   const { sortedData, sortKey, sortOrder, handleSort } = useTableSort<Shift>({
@@ -70,8 +72,11 @@ export default function ShiftsPage({ role }: ShiftsPageProps) {
         </div>
         {role !== 'manager' && (
           <button
-            onClick={s.openCreate}
-            className="bg-red-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-red-600/20 hover:bg-red-700 transition-all active:scale-95 flex items-center justify-center gap-2 self-start lg:self-center"
+            disabled={isGuest}
+            aria-disabled={isGuest}
+            onClick={() => !isGuest && s.openCreate()}
+            title={isGuest ? tooltip : undefined}
+            className={isGuest ? "bg-slate-300 text-slate-500 px-6 py-2.5 rounded-xl font-bold text-sm cursor-not-allowed opacity-60 flex items-center justify-center gap-2 self-start lg:self-center" : "bg-red-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-red-600/20 hover:bg-red-700 transition-all active:scale-95 flex items-center justify-center gap-2 self-start lg:self-center"}
           >
             <Plus size={18} />
             New Shift
