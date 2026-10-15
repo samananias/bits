@@ -46,40 +46,57 @@ export function OverviewDashboard() {
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-6 lg:gap-8">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-red-600/10 via-rose-500/5 to-transparent border border-red-500/10 rounded-3xl p-6 lg:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm overflow-hidden relative">
+      <div className="bg-gradient-to-r from-red-600/10 via-rose-500/5 to-transparent border border-red-500/15 rounded-3xl p-5 sm:p-6 lg:p-8 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6 shadow-sm overflow-hidden relative">
         {/* Abstract background mesh effect */}
         <div className="absolute -right-16 -top-16 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
         
-        <div className="flex items-center gap-4 relative z-10">
-          <Image
-            src="/images/av.jpg"
-            alt="AV Logo"
-            width={48}
-            height={48}
-            className="object-contain rounded-xl shrink-0 shadow-sm"
-            priority
-          />
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              Hello, {userName}!
+        <div className="flex items-start sm:items-center gap-3.5 sm:gap-4.5 relative z-10">
+          {/* Brand Seal Emblem */}
+          <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden shrink-0 shadow-md shadow-red-500/15 ring-2 ring-red-500/20 bg-red-600">
+            <Image
+              src="/images/av.jpg"
+              alt="Avega Bros Logo"
+              width={56}
+              height={56}
+              className="w-full h-full object-cover rounded-2xl"
+              priority
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5">
+              <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-red-600/90 font-mono">
+                Avega Bros.
+              </span>
+              <span className="text-slate-300 text-xs">•</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                BITS Portal
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+              Hello, {userName || 'Employee'}!
             </h1>
-            <p className="text-slate-500 font-medium mt-1 flex items-center gap-1.5 text-sm">
-              <CalendarDays className="w-4 h-4 text-slate-400" />
-              {new Date().toLocaleDateString('en-PH', {
-                timeZone: 'Asia/Manila',
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+
+            <p className="text-slate-500 font-medium mt-1 flex items-center gap-1.5 text-xs sm:text-sm">
+              <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0" />
+              <span>
+                {new Date().toLocaleDateString('en-PH', {
+                  timeZone: 'Asia/Manila',
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </span>
             </p>
           </div>
         </div>
         
-        <div className="flex items-center gap-2 relative z-10 shrink-0 bg-white/80 backdrop-blur-sm border border-slate-100 p-2 rounded-2xl shadow-sm">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse ml-2" />
-          <span className="text-xs font-bold text-slate-600 pr-2">System Active</span>
+        <div className="flex items-center gap-2 relative z-10 shrink-0 bg-white/80 backdrop-blur-sm border border-slate-100 px-3 py-1.5 rounded-2xl shadow-sm self-start md:self-center">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-xs font-bold text-slate-600">System Active</span>
         </div>
       </div>
 
