@@ -6,6 +6,8 @@ import { User, Menu, Settings, LogOut, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useServerTime } from '@/hooks/useServerTime';
 import { GuestModeMenu, type GuestRole } from './shared/GuestModeMenu';
+import { useCurrentUser, formatEmployeeFullName } from '@/hooks/useCurrentUser';
+import { useTodayHoliday } from '@/hooks/useLookups';
 
 export default function TopBar({ setIsMobileOpen, guestRole }: { setIsMobileOpen: (val: boolean) => void; guestRole?: GuestRole }) {
   const router = useRouter();
@@ -13,26 +15,16 @@ export default function TopBar({ setIsMobileOpen, guestRole }: { setIsMobileOpen
   const [mounted, setMounted] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [userName, setUserName] = useState('');
-  const [holidayName, setHolidayName] = useState<string | null>(null);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  // ── Unified cached data: user profile and today's holiday ──
+  const { data: user } = useCurrentUser();
+  const { holidayName } = useTodayHoliday();
+
+  const userName = user ? formatEmployeeFullName(user, 'HR') : 'HR';
+  const profileImage = user?.profilePicture || null;
 
   useEffect(() => {
     setMounted(true);
-    const fetchUser = async () => {
-      try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' })
-        if (res.ok) {
-          const data = await res.json()
-          const emp = data.employee ?? data
-          setUserName(`${emp.firstName}${emp.middleName ? ` ${emp.middleName[0]}.` : ''} ${emp.lastName}${emp.suffix ? ` ${emp.suffix}` : ''}`)
-          setProfileImage(emp.profilePicture || null)
-        }
-      } catch {
-        setUserName('HR')
-      }
-    }
-    fetchUser();
   }, []);
 
   useEffect(() => {
@@ -49,23 +41,6 @@ export default function TopBar({ setIsMobileOpen, guestRole }: { setIsMobileOpen
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
   };
-
-  // Fetch holiday name for today (fires once on mount)
-  useEffect(() => {
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' })
-    const [year] = today.split('-')
-    fetch(`/api/holidays?year=${year}`, { credentials: 'include' })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success && data.holidays) {
-          const match = data.holidays.find((h: { date: string; name: string }) =>
-            new Date(h.date).toISOString().split('T')[0] === today
-          )
-          if (match) setHolidayName(match.name)
-        }
-      })
-      .catch(() => { })
-  }, [])
 
   return (
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40">
