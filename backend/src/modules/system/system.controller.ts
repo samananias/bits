@@ -77,10 +77,6 @@ export const getValidationLimits = (_req: Request, res: Response) => {
 export const getSyncStatus = async (req: Request, res: Response) => {
     try {
         const config = await prisma.syncConfig.findUnique({ where: { id: 1 } });
-        if (!config) {
-            return res.status(404).json({ success: false, message: 'Sync config not found' });
-        }
-
         const schedulerStatus = syncScheduler.getStatus();
         const healthStatus = healthCheckScheduler.getStatus();
 
@@ -88,7 +84,7 @@ export const getSyncStatus = async (req: Request, res: Response) => {
             success: true,
             status: {
                 ...schedulerStatus,
-                globalSyncEnabled: config.globalSyncEnabled,
+                globalSyncEnabled: config?.globalSyncEnabled ?? true,
                 healthCheck: healthStatus,
             }
         });
@@ -130,7 +126,33 @@ export const getSyncConfig = async (req: Request, res: Response) => {
             }
         });
         if (!config) {
-            return res.status(404).json({ success: false, message: 'Sync config not found' });
+            return res.json({
+                success: true,
+                config: {
+                    defaultIntervalSec: 30,
+                    highFreqIntervalSec: 30,
+                    lowFreqIntervalSec: 600,
+                    shiftAwareSyncEnabled: false,
+                    shiftBufferMinutes: 120,
+                    nightShiftBufferMinutes: 120,
+                    autoTimeSyncEnabled: true,
+                    timeSyncIntervalSec: 3600,
+                    globalMinCheckoutMinutes: 120,
+                    minShiftGapMinutes: 30,
+                    healthCheckEnabled: true,
+                    healthCheckIntervalSec: 60,
+                    logBufferMaintenanceEnabled: true,
+                    logBufferMaintenanceSchedule: 'weekly',
+                    logBufferMaintenanceHour: 3,
+                    dbBackupEnabled: false,
+                    dbBackupCron: '0 0 * * *',
+                    dbBackupRetention: 7,
+                    dbBackupCompress: true,
+                    lastBackupAt: null,
+                    lastBackupStatus: null,
+                    lastBackupError: null,
+                }
+            });
         }
         res.json({ success: true, config });
     } catch (error: unknown) {

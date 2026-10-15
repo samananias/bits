@@ -1,4 +1,5 @@
 import cron from 'node-cron';
+import { prisma } from './prisma';
 import { syncZkData, syncAllDeviceClocks } from '../../modules/devices/zk';
 import { syncScheduler } from '../../modules/system/syncScheduler';
 import { timeSyncScheduler } from '../../modules/system/timeSyncScheduler';
@@ -8,10 +9,43 @@ import { backupScheduler } from '../../modules/system/backupScheduler';
 import { autoCloseIncompleteAttendance, autoCheckoutEmployees } from '../../modules/attendance/attendance.service';
 
 /**
+ * Ensure the default SyncConfig record (id: 1) exists in the database
+ */
+async function ensureDefaultSyncConfig() {
+    try {
+        await prisma.syncConfig.upsert({
+            where: { id: 1 },
+            update: {},
+            create: {
+                id: 1,
+                globalSyncEnabled: true,
+                defaultIntervalSec: 30,
+                highFreqIntervalSec: 30,
+                lowFreqIntervalSec: 600,
+                shiftAwareSyncEnabled: false,
+                shiftBufferMinutes: 120,
+                nightShiftBufferMinutes: 120,
+                autoTimeSyncEnabled: true,
+                timeSyncIntervalSec: 3600,
+                dbBackupEnabled: false,
+                dbBackupCron: '0 0 * * *',
+                dbBackupRetention: 7,
+                dbBackupCompress: true,
+            },
+        });
+    } catch (err) {
+        console.warn('[SyncConfig] Failed to ensure default sync config:', err);
+    }
+}
+
+/**
  * Initialize all cron jobs for automated attendance tracking
  */
 export const startCronJobs = () => {
     console.log('[CronJobs] Initializing automated jobs...');
+
+    // Ensure system configuration exists before schedulers read it
+    void ensureDefaultSyncConfig();
 
     // Job 1: Sync attendance logs from ZKTeco device
     // Uses the new dynamic SyncScheduler instead of hardcoded node-cron

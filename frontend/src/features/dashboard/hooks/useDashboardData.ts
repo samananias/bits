@@ -128,84 +128,38 @@ export function useDashboardData(role: 'admin' | 'hr') {
     const load = useCallback(async () => {
         try {
             const todayStr = phtStr(new Date());
-            const weekDates = getWeekDates();
-            const weekStart = phtStr(weekDates[0].date);
-            const weekEnd = phtStr(weekDates[6].date);
 
-            const [bRes, dRes, eRes, aRes, wRes, sRes, hRes] = await Promise.all([
-                fetch('/api/branches', { credentials: 'include' }),
+            const [statsRes, dRes, sRes, hRes] = await Promise.all([
+                fetch('/api/attendance/dashboard-stats', { credentials: 'include' }),
                 fetch('/api/devices', { credentials: 'include' }),
-                fetch('/api/employees?limit=5000', { credentials: 'include' }),
-                fetch(`/api/attendance?startDate=${todayStr}&endDate=${todayStr}&limit=5000`, { credentials: 'include' }),
-                fetch(`/api/attendance?startDate=${weekStart}&endDate=${weekEnd}&limit=5000`, { credentials: 'include' }),
                 fetch('/api/system/sync-status', { credentials: 'include' }),
                 fetch(`/api/holidays?year=${new Date().getFullYear()}`, { credentials: 'include' }),
             ]);
-            if (eRes.status === 401) { router.replace('/login'); return; }
+            if (statsRes.status === 401) { router.replace('/login'); return; }
 
-            const bd = bRes.ok ? await bRes.json() : { success: false };
+            const statsData = statsRes.ok ? await statsRes.json() : { success: false };
             const dd = dRes.ok ? await dRes.json() : { success: false };
-            const ed = await eRes.json();
-            const ad = await aRes.json();
-            const wd = await wRes.json();
             const sd = sRes.ok ? await sRes.json() : { success: false };
             const hd = hRes.ok ? await hRes.json() : { success: false };
 
-            // Build a holiday date set for O(1) lookup
-            const holidayList: { date: string; name: string; branches?: { branchId: number }[] }[] = hd.success ? (hd.holidays || []) : [];
-            const holidayDateSet = new Set(holidayList.map(h => new Date(h.date).toISOString().split('T')[0]));
+            // Holiday lookup
+            const holidayList: { date: string; name: string }[] = hd.success ? (hd.holidays || []) : [];
             const todayHoliday = holidayList.find(h => new Date(h.date).toISOString().split('T')[0] === todayStr);
             setHolidayName(todayHoliday?.name ?? null);
 
-            // Build a map of date -> holiday for branch-aware lookups
-            const holidayByDate = new Map<string, typeof holidayList[0]>();
-            for (const h of holidayList) {
-                holidayByDate.set(new Date(h.date).toISOString().split('T')[0], h);
+            // Populate aggregated KPI stats directly from optimized server summary
+            if (statsData.success && statsData.stats) {
+                const s = statsData.stats;
+                setTotalEmployees(s.totalEmployees);
+                setTotalPresent(s.totalPresent);
+                setTotalLate(s.totalLate);
+                setTotalAbsent(s.totalAbsent);
+                setWeeklyData(s.weekly);
+                setBranchPresence(s.branchPresence);
+                setActivity(s.recentActivity || []);
             }
 
-            // Helper: does a holiday apply to a given branchId?
-            const holidayApplies = (h: { branches?: { branchId: number }[] }, branchId?: number | null) => {
-                if (!h.branches || h.branches.length === 0) return true; // National
-                if (!branchId) return true; // No branch = treat as affected
-                return h.branches.some(b => b.branchId === branchId);
-            };
-
-            const branchList: Branch[] = bd.success ? (bd.branches || bd.data || []) : [];
             const deviceList: Device[] = dd.success ? (dd.devices || dd.data || []) : [];
-            const allEmps: RawEmployee[] = ed.success ? (ed.employees || ed.data || []) : [];
-            const emps = allEmps.filter((e: RawEmployee) => e.role === 'USER' || !e.role);
-            const atts: RawAttendance[] = (ad.success ? (ad.data || []) : []).filter((a: RawAttendance) => {
-                const emp = (a.employee || a.Employee || {}) as Partial<RawEmployee>;
-                return (emp.role === 'USER' || !emp.role) && a.status !== 'pending';
-            });
-            const weekAtts: RawAttendance[] = (wd.success ? (wd.data || []) : []).filter((a: RawAttendance) => {
-                const emp = (a.employee || a.Employee || {}) as Partial<RawEmployee>;
-                return (emp.role === 'USER' || !emp.role) && a.status !== 'pending';
-            });
- 
-            const activeEmps = emps.filter((e: RawEmployee) => e.employmentStatus === 'ACTIVE');
-            const activeCount = activeEmps.length;
-            setTotalEmployees(activeCount);
-
-            const todayPHTStr = phtStr(new Date());
-            const weeklyAll: WeekDay[] = weekDates.map(({ day, date }) => {
-                const dateStr = phtStr(date);
-                if (dateStr > todayPHTStr) return { day, present: 0, late: 0, absent: 0 };
-                const dayAtts = weekAtts.filter(a => {
-                    const recDate = a.date ? phtStr(new Date(a.date)) : '';
-                    return recDate === dateStr;
-                });
-                const dayHolidays = holidayByDate.get(dateStr) ? [holidayByDate.get(dateStr)!] : [];
-                const { stats: dayStats } = processAttendanceData(dayAtts, activeEmps, dateStr, dayHolidays);
-                return { day, present: dayStats.onTime, late: dayStats.late, absent: dayStats.absent };
-            });
-            // Always show Mon–Sat; only show Sun if there is attendance data
-            const weekly = weeklyAll.filter(d => {
-                if (d.day !== 'Sun') return true;
-                return d.present > 0 || d.late > 0;
-            });
-            setWeeklyData(weekly);
-
             const devicesWithStatus: DeviceWithStatus[] = deviceList.map(dev => ({
                 ...dev,
                 syncEnabled: dev.syncEnabled ?? true,
@@ -213,82 +167,11 @@ export function useDashboardData(role: 'admin' | 'hr') {
             }));
             setDevices(devicesWithStatus);
 
-            if (sd && sd.success) {
+            if (sd && sd.success && sd.status) {
                 setGlobalSyncEnabled(sd.status.globalSyncEnabled);
             }
-
-            const bPresence: BranchData[] = branchList.map(b => {
-                const branchEmps = emps.filter(e => e.Branch?.name === b.name && e.employmentStatus === 'ACTIVE');
-                const branchAtts = atts.filter(a => a.employee?.Branch?.name === b.name && a.checkInTime);
-                const total = branchEmps.length;
-                const present = branchAtts.length;
-                const pct = total === 0 ? 0 : Math.round((present / total) * 100);
-                const color = pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-rose-500';
-                return { name: b.name, percentage: pct, color };
-            });
-            setBranchPresence(bPresence);
-
-            // Use unified processAttendanceData for today's stats
-            const todayHolidayArr = todayHoliday ? [todayHoliday] : [];
-            const { stats: todayStats } = processAttendanceData(atts, activeEmps, todayStr, todayHolidayArr);
-            setTotalPresent(todayStats.onTime);
-            setTotalLate(todayStats.late);
-            setTotalAbsent(todayStats.absent);
-            if (todayHoliday) {
-                // Count holiday-affected employees who didn't check in
-                const holidayAffected = activeEmps.filter((e: RawEmployee) => {
-                    if (e.hireDate && phtStr(new Date(e.hireDate)) > todayPHTStr) return false;
-                    return holidayApplies(todayHoliday, e.branchId);
-                });
-                const holidayAffectedPresent = atts.filter(a => {
-                    const emp = (a.employee || a.Employee || {}) as Partial<RawEmployee>;
-                    return holidayApplies(todayHoliday, emp.branchId) && a.checkInTime;
-                }).length;
-                setTotalHoliday(Math.max(0, holidayAffected.length - holidayAffectedPresent));
-            } else {
-                setTotalHoliday(0);
-            }
-
-            const events: LiveRecord[] = [];
-            for (const r of atts) {
-                const empName = `${r.employee?.firstName || ''} ${r.employee?.lastName || ''}`.trim();
-                const dept = r.employee?.Department?.name || '—';
-                const branch = r.employee?.Branch?.name || '—';
-                const ciStatus: LiveRecord['status'] = r.status === 'absent' ? 'absent' : (r.lateMinutes > 0 ? 'late' : 'on-time');
-
-                if (r.checkInTime) {
-                    events.push({
-                        id: `${r.id}-in`,
-                        employee: empName,
-                        department: dept,
-                        branch,
-                        eventType: 'check-in',
-                        time: new Date(r.checkInTime).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit' }),
-                        eventTs: new Date(r.checkInTime).getTime(),
-                        status: ciStatus,
-                        shiftType: r.shiftType || 'MORNING',
-                    });
-                }
-
-                if (r.checkOutTime) {
-                    events.push({
-                        id: `${r.id}-out`,
-                        employee: empName,
-                        department: dept,
-                        branch,
-                        eventType: 'check-out',
-                        time: new Date(r.checkOutTime).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit' }),
-                        eventTs: new Date(r.checkOutTime).getTime(),
-                        status: r.undertimeMinutes > 0 ? 'undertime' : 'on-time',
-                        shiftType: r.shiftType || 'MORNING',
-                    });
-                }
-            }
-
-            events.sort((a, b) => b.eventTs - a.eventTs);
-            setActivity(events.slice(0, 15));
         } catch (err) {
-            console.error(err);
+            console.error('[Dashboard] Error loading dashboard data:', err);
         } finally {
             setLoading(false);
         }

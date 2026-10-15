@@ -6,6 +6,7 @@ import { User, Menu, Settings, LogOut, ChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import { useServerTime } from '@/hooks/useServerTime'
 import { GuestModeMenu, type GuestRole } from './shared/GuestModeMenu'
+import { useCurrentUser, formatEmployeeFullName } from '@/hooks/useCurrentUser'
 
 interface EmployeeTopbarProps {
   onMenuClick: () => void
@@ -18,25 +19,11 @@ export function EmployeeTopbar({ onMenuClick, guestRole }: EmployeeTopbarProps) 
   const { serverTime: time } = useServerTime(1000)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const [userName, setUserName] = useState('')
-  const [profileImage, setProfileImage] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' })
-        if (res.ok) {
-          const data = await res.json()
-          const emp = data.employee ?? data
-          setUserName(`${emp.firstName}${emp.middleName ? ` ${emp.middleName[0]}.` : ''} ${emp.lastName}${emp.suffix ? ` ${emp.suffix}` : ''}`)
-          setProfileImage(emp.profilePicture || null)
-        }
-      } catch {
-        // Fallback or ignore
-      }
-    }
-    fetchUser()
-  }, [])
+  // ── Unified cached data: user profile ──
+  const { data: user } = useCurrentUser()
+  const userName = user ? formatEmployeeFullName(user, 'Employee') : 'Employee'
+  const profileImage = user?.profilePicture || null
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import { User, Menu, Settings, LogOut, ChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import { useServerTime } from '@/hooks/useServerTime'
-import { useDeviceStream, DeviceStatusPayload, DeviceConnectedPayload } from '@/features/devices/hooks/useDeviceStream'
+import { useDeviceStreamContext } from '@/context/DeviceStreamContext'
 import { GuestModeMenu, type GuestRole } from './shared/GuestModeMenu'
+import { useCurrentUser, formatEmployeeFullName } from '@/hooks/useCurrentUser'
+import { useTodayHoliday } from '@/hooks/useLookups'
 
 interface AdminTopbarProps {
   onMenuClick: () => void
@@ -18,47 +20,18 @@ export function AdminTopbar({ onMenuClick, guestRole }: AdminTopbarProps) {
   const router = useRouter()
   const { serverTime: time, isSynced } = useServerTime(1000)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [profileImage, setProfileImage] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const [userName, setUserName] = useState('')
-  const [deviceOnline, setDeviceOnline] = useState<boolean | null>(null)
-  const [holidayName, setHolidayName] = useState<string | null>(null)
 
-  // ── SSE: real-time device status ────────────────────────────────────────
-  // Replaces the previous 15-second polling interval with an SSE stream.
-  const handleDeviceConnected = useCallback((payload: DeviceConnectedPayload) => {
-    // On connect, the server sends the current status of all devices.
-    // If ANY device is online, show online. If all are offline, show offline.
-    const anyOnline = payload.devices.some(d => d.isActive)
-    setDeviceOnline(anyOnline)
-  }, [])
+  // ── Unified cached data: user profile and today's holiday ──
+  const { data: user } = useCurrentUser()
+  const { holidayName } = useTodayHoliday()
 
-  const handleDeviceStatus = useCallback((payload: DeviceStatusPayload) => {
-    // A single device changed state — update the aggregate indicator.
-    setDeviceOnline(payload.isActive)
-  }, [])
+  const userName = user ? formatEmployeeFullName(user, 'Admin') : 'Admin'
+  const profileImage = user?.profilePicture || null
 
-  useDeviceStream({
-    onConnected: handleDeviceConnected,
-    onStatusChange: handleDeviceStatus,
-  })
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' })
-        if (res.ok) {
-          const data = await res.json()
-          const emp = data.employee ?? data
-          setUserName(`${emp.firstName}${emp.middleName ? ` ${emp.middleName[0]}.` : ''} ${emp.lastName}${emp.suffix ? ` ${emp.suffix}` : ''}`)
-          setProfileImage(emp.profilePicture || null)
-        }
-      } catch {
-        setUserName('Admin')
-      }
-    }
-    fetchUser()
-  }, [])
+  // ── Shared SSE: read device status from layout-level DeviceStreamContext ──
+  const streamCtx = useDeviceStreamContext()
+  const deviceOnline = streamCtx?.deviceOnline ?? null
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -68,23 +41,6 @@ export function AdminTopbar({ onMenuClick, guestRole }: AdminTopbarProps) {
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  // Fetch holiday name for today (fires once on mount)
-  useEffect(() => {
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' })
-    const [year] = today.split('-')
-    fetch(`/api/holidays?year=${year}`, { credentials: 'include' })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success && data.holidays) {
-          const match = data.holidays.find((h: { date: string; name: string }) =>
-            new Date(h.date).toISOString().split('T')[0] === today
-          )
-          if (match) setHolidayName(match.name)
-        }
-      })
-      .catch(() => {})
   }, [])
 
   const handleLogout = async () => {

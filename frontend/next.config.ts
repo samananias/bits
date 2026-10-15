@@ -12,6 +12,7 @@ const rawBackendUrl = process.env.BACKEND_URL || "http://localhost:3001";
 const backendUrl = rawBackendUrl.replace(/\/api\/?$/, "").replace(/\/+$/, "");
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   turbopack: {
     // Force Turbopack to use the frontend folder as the project root.
     // Otherwise it climbs up to the .git folder in the parent directory
@@ -19,12 +20,12 @@ const nextConfig: NextConfig = {
     root: process.cwd(),
   },
   webpack: (config) => {
+    const isPolling = process.env.WATCHPACK_POLLING === 'true' || process.env.CHOKIDAR_USEPOLLING === 'true';
     config.watchOptions = {
       ignored: ['**/node_modules/**', '**/.next/**'],
-      poll: 1000,
-      aggregateTimeout: 300,
-    }
-    return config
+      ...(isPolling ? { poll: 1000, aggregateTimeout: 300 } : {}),
+    };
+    return config;
   },
   async rewrites() {
     return [
