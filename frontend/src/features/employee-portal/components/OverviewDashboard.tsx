@@ -52,16 +52,14 @@ export function OverviewDashboard() {
         <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
         
         <div className="flex items-center gap-4 relative z-10">
-          <div className="relative w-12 h-12 rounded-2xl overflow-hidden border border-red-500/20 shadow-sm shrink-0 bg-white flex items-center justify-center p-0.5">
-            <Image
-              src="/images/av.jpg"
-              alt="AV Logo"
-              width={44}
-              height={44}
-              className="object-contain rounded-xl"
-              priority
-            />
-          </div>
+          <Image
+            src="/images/av.jpg"
+            alt="AV Logo"
+            width={48}
+            height={48}
+            className="object-contain rounded-xl shrink-0 shadow-sm"
+            priority
+          />
           <div>
             <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
               Hello, {userName}!
