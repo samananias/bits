@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
                 'Cookie': cookie,
             },
             cache: 'no-store',
+            signal: request.signal,
         })
 
         if (!backendRes.ok) {
@@ -60,6 +61,9 @@ export async function GET(request: NextRequest) {
             },
         })
     } catch (err: unknown) {
+        if (request.signal.aborted) {
+            return new Response(null, { status: 499 })
+        }
         const message = err instanceof Error ? err.message : String(err)
         console.error(`[SSE Proxy] Fetch failed: ${message}`)
         return new Response(`SSE proxy error: ${message}`, { status: 502 })

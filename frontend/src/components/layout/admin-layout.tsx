@@ -10,6 +10,7 @@ import { AdminSidebar } from './admin-sidebar'
 import { AdminTopbar } from './admin-topbar'
 import { GuestActionNotice } from './shared/GuestActionNotice'
 import { GlobalLoading } from '@/components/ui/GlobalLoading'
+import { DeviceStreamProvider } from '@/context/DeviceStreamContext'
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
     const { isLoading, isAuthenticated, employee } = useAuth('ADMIN')
@@ -31,7 +32,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     const guestRole = employee?.isGuest ? (employee.guestViewRole ?? employee.role) : undefined
 
     return (
-        <div className="h-screen bg-gray-50 overflow-hidden relative">
+        <DeviceStreamProvider>
+            <div className="h-screen bg-gray-50 overflow-hidden relative">
             <SessionExpiredModal />
             <SessionExpiringWarning />
             {guestRole && <GuestActionNotice />}
@@ -60,5 +62,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 </main>
             </div>
         </div>
+        </DeviceStreamProvider>
     )
 }

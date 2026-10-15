@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { User, Menu, Settings, LogOut, ChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import { useServerTime } from '@/hooks/useServerTime'
-import { useDeviceStream, DeviceStatusPayload, DeviceConnectedPayload } from '@/features/devices/hooks/useDeviceStream'
+import { useDeviceStreamContext } from '@/context/DeviceStreamContext'
 import { GuestModeMenu, type GuestRole } from './shared/GuestModeMenu'
 
 interface AdminTopbarProps {
@@ -21,27 +21,11 @@ export function AdminTopbar({ onMenuClick, guestRole }: AdminTopbarProps) {
   const [profileImage, setProfileImage] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [userName, setUserName] = useState('')
-  const [deviceOnline, setDeviceOnline] = useState<boolean | null>(null)
   const [holidayName, setHolidayName] = useState<string | null>(null)
 
-  // ── SSE: real-time device status ────────────────────────────────────────
-  // Replaces the previous 15-second polling interval with an SSE stream.
-  const handleDeviceConnected = useCallback((payload: DeviceConnectedPayload) => {
-    // On connect, the server sends the current status of all devices.
-    // If ANY device is online, show online. If all are offline, show offline.
-    const anyOnline = payload.devices.some(d => d.isActive)
-    setDeviceOnline(anyOnline)
-  }, [])
-
-  const handleDeviceStatus = useCallback((payload: DeviceStatusPayload) => {
-    // A single device changed state — update the aggregate indicator.
-    setDeviceOnline(payload.isActive)
-  }, [])
-
-  useDeviceStream({
-    onConnected: handleDeviceConnected,
-    onStatusChange: handleDeviceStatus,
-  })
+  // ── Shared SSE: read device status from layout-level DeviceStreamContext ──
+  const streamCtx = useDeviceStreamContext()
+  const deviceOnline = streamCtx?.deviceOnline ?? null
 
   useEffect(() => {
     const fetchUser = async () => {

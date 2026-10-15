@@ -76,6 +76,21 @@ export function useDeviceStream({
 }: UseDeviceStreamOptions): void {
     const esRef = useRef<EventSource | null>(null)
 
+    // ── Stable callback refs ────────────────────────────────────────────
+    // Store callbacks in refs so connect never recreates and causes reconnects
+    // when parent components re-render with new inline handler closures.
+    const onStatusChangeRef = useRef(onStatusChange)
+    const onConnectedRef = useRef(onConnected)
+    const onConfigUpdateRef = useRef(onConfigUpdate)
+    const onSyncResultRef = useRef(onSyncResult)
+
+    useEffect(() => {
+        onStatusChangeRef.current = onStatusChange
+        onConnectedRef.current = onConnected
+        onConfigUpdateRef.current = onConfigUpdate
+        onSyncResultRef.current = onSyncResult
+    }, [onStatusChange, onConnected, onConfigUpdate, onSyncResult])
+
     const connect = useCallback(() => {
         if (esRef.current) {
             esRef.current.close()
@@ -89,7 +104,7 @@ export function useDeviceStream({
             try {
                 const payload: DeviceConnectedPayload = JSON.parse(event.data)
                 console.log('[SSE] Device stream connected')
-                onConnected?.(payload)
+                onConnectedRef.current?.(payload)
             } catch (err) {
                 console.error('[SSE] Failed to parse device connected event:', err)
             }
@@ -98,20 +113,20 @@ export function useDeviceStream({
         es.addEventListener('device-status', (event: MessageEvent) => {
             try {
                 const payload: DeviceStatusPayload = JSON.parse(event.data)
-                onStatusChange?.(payload)
+                onStatusChangeRef.current?.(payload)
             } catch (err) {
                 console.error('[SSE] Failed to parse device-status event:', err)
             }
         })
 
         es.addEventListener('config-update', () => {
-            onConfigUpdate?.()
+            onConfigUpdateRef.current?.()
         })
 
         es.addEventListener('device-sync-result', (event: MessageEvent) => {
             try {
                 const payload: DeviceSyncResultPayload = JSON.parse(event.data)
-                onSyncResult?.(payload)
+                onSyncResultRef.current?.(payload)
             } catch (err) {
                 console.error('[SSE] Failed to parse device-sync-result event:', err)
             }
@@ -121,7 +136,7 @@ export function useDeviceStream({
             // Browser EventSource auto-retries — just log for visibility.
             console.warn('[SSE] Device stream error — browser will retry')
         }
-    }, [onStatusChange, onConnected, onConfigUpdate, onSyncResult])
+    }, [])
 
     useEffect(() => {
         if (!enabled) {
