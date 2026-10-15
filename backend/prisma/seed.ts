@@ -310,6 +310,33 @@ async function main() {
         }
     }
 
+    // ──────────────────────────────────────────────
+    // 6. Virtual ZKTeco Terminal Device
+    // ──────────────────────────────────────────────
+    const deviceIp = process.env.ZK_HOST || '127.0.0.1'
+    const devicePort = parseInt(process.env.ZK_PORT || '4370')
+    const virtualDevice = await prisma.device.upsert({
+        where: { ip: deviceIp },
+        update: {
+            name: 'Virtual ZKTeco Terminal',
+            port: devicePort,
+            isActive: true,
+            syncEnabled: true,
+            location: 'Main Lobby Simulator',
+            updatedAt: new Date(),
+        },
+        create: {
+            name: 'Virtual ZKTeco Terminal',
+            ip: deviceIp,
+            port: devicePort,
+            location: 'Main Lobby Simulator',
+            isActive: true,
+            syncEnabled: true,
+            updatedAt: new Date(),
+        },
+    })
+    console.log(`📟 Device: ${virtualDevice.name} (${virtualDevice.ip}:${virtualDevice.port})`)
+
     console.log('')
     console.log('✅ Seed completed!')
     console.log('')
