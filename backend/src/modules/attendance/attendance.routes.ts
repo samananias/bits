@@ -15,6 +15,7 @@ import {
     cancelAdjustment,
     reopenAdjustment,
 } from './attendance.controller';
+import { getDashboardSummaryStats } from './attendance-summary.controller';
 import { authenticate } from '../../shared/middleware/auth.middleware';
 import { adminManagerOrHR, managerOrAdmin, adminOrHR } from '../../shared/middleware/role.middleware';
 import { departmentScope } from '../../shared/middleware/departmentScope.middleware';
@@ -111,6 +112,20 @@ router.post('/manual', adminOrHR, createManualAttendance);
  *         description: SSE stream — connection stays open and pushes events
  */
 router.get('/stream', streamAttendance);
+
+/**
+ * @swagger
+ * /api/attendance/dashboard-stats:
+ *   get:
+ *     summary: Get high-performance aggregated attendance and employee stats for dashboards
+ *     tags: [Attendance]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard statistics
+ */
+router.get('/dashboard-stats', getDashboardSummaryStats);
 
 /**
  * @swagger
