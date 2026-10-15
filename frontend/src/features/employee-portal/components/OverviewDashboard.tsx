@@ -1,5 +1,5 @@
 import React from 'react'
-import { LogIn, LogOut, CalendarDays, Clock, UserCheck, AlertCircle, Sparkles, TrendingUp, Info } from 'lucide-react'
+import { LogIn, LogOut, CalendarDays, Clock, UserCheck, AlertCircle, Fingerprint, TrendingUp, Info } from 'lucide-react'
 import { useEmployeeDashboard } from '../hooks/useEmployeeDashboard'
 
 export function OverviewDashboard() {
@@ -52,7 +52,7 @@ export function OverviewDashboard() {
         
         <div className="flex items-center gap-4 relative z-10">
           <div className="bg-red-500/10 p-3.5 rounded-2xl border border-red-500/20 shrink-0">
-            <Sparkles className="w-6 h-6 text-red-600" />
+            <Fingerprint className="w-6 h-6 text-red-600" />
           </div>
           <div>
             <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
