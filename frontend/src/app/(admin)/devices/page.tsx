@@ -12,6 +12,7 @@ import { Plus, Server, RadioTower, Loader2, AlertCircle, RefreshCw, ShieldCheck,
 import { DeviceConfigureModal, Device, FormState } from '@/features/devices/components/DeviceConfigureModal'
 import { DeviceReconcileModal } from '@/features/devices/components/DeviceReconcileModal'
 import { DeviceDeleteConfirmModal } from '@/features/devices/components/DeviceDeleteConfirmModal'
+import { DeviceSimulateModal } from '@/features/devices/components/DeviceSimulateModal'
 import { DeviceCard } from '@/features/devices/components/DeviceCard'
 import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
@@ -76,6 +77,9 @@ export default function DevicesPage() {
     // Reconcile state
     const [reconcilingId, setReconcilingId] = useState<number | null>(null)
     const [reconcileTarget, setReconcileTarget] = useState<Device | null>(null)
+
+    // Simulate Scan state
+    const [simulateTarget, setSimulateTarget] = useState<Device | null>(null)
 
     // Device Admin state
     const [administrators, setAdministrators] = useState<AdminEnrollment[]>([])
@@ -553,6 +557,7 @@ export default function DevicesPage() {
                             onConfirmReconcile={(d) => setReconcileTarget(d)}
                             onOpenEdit={openEdit}
                             onDeleteClick={(d) => setDeleteTarget(d)}
+                            onSimulateClick={(d) => setSimulateTarget(d)}
                         />
                     ))}
                 </div>
@@ -776,6 +781,17 @@ export default function DevicesPage() {
                 deleting={deletingId !== null} 
                 onClose={() => setDeleteTarget(null)} 
                 onConfirm={handleDelete} 
+            />
+
+            <DeviceSimulateModal
+                device={simulateTarget}
+                employees={employees}
+                isOpen={simulateTarget !== null}
+                onClose={() => setSimulateTarget(null)}
+                onSuccess={(msg) => {
+                    showToast('success', 'Simulated Scan', msg)
+                    fetchDevices()
+                }}
             />
 
             {/* ── Manage Device Administrators Modal ─────────────────────── */}

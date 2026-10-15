@@ -849,3 +849,117 @@ export const removeDeviceAdministrator = async (req: Request, res: Response) => 
         res.status(500).json({ success: false, message: 'Failed to revoke device administrator privileges', error: zkErrMsg(error) });
     }
 };
+
+// ─── POST /api/devices/:id/simulate-punch ─────────────────────────────────────
+export const simulateDevicePunch = async (req: Request, res: Response) => {
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) {
+        return res.status(400).json({ success: false, message: 'Invalid device ID' });
+    }
+
+    try {
+        const device = await prisma.device.findUnique({ where: { id } });
+        if (!device) {
+            return res.status(404).json({ success: false, message: 'Device not found' });
+        }
+
+        const { employeeId, state = 0, verifyType = 1, autoSync = true } = req.body;
+        if (!employeeId) {
+            return res.status(400).json({ success: false, message: 'Employee ID is required' });
+        }
+
+        const employee = await prisma.employee.findUnique({
+            where: { id: parseInt(String(employeeId)) },
+            select: { id: true, firstName: true, lastName: true, zkId: true, employeeNumber: true }
+        });
+
+        if (!employee) {
+            return res.status(404).json({ success: false, message: 'Employee not found' });
+        }
+
+        if (!employee.zkId) {
+            return res.status(400).json({
+                success: false,
+                message: `Employee "${employee.firstName} ${employee.lastName}" has no assigned Biometric ID (zkId). Please assign a zkId first.`
+            });
+        }
+
+        // Simulator web API port defaults to 3030
+        const simHttpPort = process.env.SIMULATOR_HTTP_PORT || '3030';
+        const simHost = device.ip === '127.0.0.1' || device.ip === 'localhost' ? '127.0.0.1' : device.ip;
+        const punchUrl = `http://${simHost}:${simHttpPort}/api/punch`;
+
+        console.log(`[Simulator] Sending simulated punch for zkId ${employee.zkId} (state=${state}) to ${punchUrl}...`);
+
+        let simResponse: any;
+        try {
+            const response = await fetch(punchUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: String(employee.zkId),
+                    state: Number(state),
+                    verifyType: Number(verifyType),
+                }),
+                signal: AbortSignal.timeout(5000),
+            });
+
+            simResponse = await response.json();
+            if (!response.ok || simResponse.result !== 'pass') {
+                return res.status(400).json({
+                    success: false,
+                    message: `Simulator rejected punch: ${simResponse.reason || simResponse.error || 'Unknown error'}`,
+                    simResponse
+                });
+            }
+        } catch (fetchErr: any) {
+            console.error(`[Simulator] Failed to contact simulator at ${punchUrl}:`, fetchErr);
+            return res.status(503).json({
+                success: false,
+                message: `Could not connect to the simulator HTTP API at ${punchUrl}. Please verify the simulator is running (npm run dev:simulator).`,
+                error: fetchErr.message
+            });
+        }
+
+        const stateLabels: Record<number, string> = {
+            0: 'Check-In',
+            1: 'Check-Out',
+            4: 'Overtime In',
+            5: 'Overtime Out',
+        };
+        const stateLabel = stateLabels[Number(state)] || 'Punch';
+
+        let syncResult = null;
+        if (autoSync) {
+            console.log(`[Simulator] Auto-syncing device ${device.id} after simulated punch...`);
+            const { syncSingleDevice } = await import('./zk');
+            syncResult = await syncSingleDevice(device);
+        }
+
+        void audit({
+            action: 'SIMULATE_PUNCH',
+            entityType: 'Device',
+            entityId: device.id,
+            performedBy: req.user?.employeeId,
+            level: 'INFO',
+            details: `Simulated ${stateLabel} for ${employee.firstName} ${employee.lastName} (zkId: ${employee.zkId}) on ${device.name}`,
+            correlationId: req.correlationId
+        });
+
+        return res.json({
+            success: true,
+            message: `Successfully simulated ${stateLabel} for ${employee.firstName} ${employee.lastName}!`,
+            record: simResponse.record,
+            syncResult,
+        });
+
+    } catch (err: unknown) {
+        console.error('[Simulator] Error in simulateDevicePunch:', err);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to execute simulated punch',
+            error: zkErrMsg(err)
+        });
+    }
+};
+

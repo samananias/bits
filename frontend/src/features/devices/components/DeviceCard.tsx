@@ -2,7 +2,7 @@ import React from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Wifi, WifiOff, Server, MapPin, ListTodo, Clock, Check, AlertCircle, Loader2, Activity, RefreshCw, Pencil, Trash2 } from 'lucide-react'
+import { Wifi, WifiOff, Server, MapPin, ListTodo, Clock, Check, AlertCircle, Loader2, Activity, RefreshCw, Pencil, Trash2, Sparkles, ExternalLink } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import { Device } from './DeviceConfigureModal'
 import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
@@ -40,6 +40,7 @@ interface DeviceCardProps {
     onConfirmReconcile: (device: Device) => void;
     onOpenEdit: (device: Device) => void;
     onDeleteClick: (device: Device) => void;
+    onSimulateClick?: (device: Device) => void;
 }
 
 export function DeviceCard({
@@ -52,11 +53,18 @@ export function DeviceCard({
     onTest,
     onConfirmReconcile,
     onOpenEdit,
-    onDeleteClick
+    onDeleteClick,
+    onSimulateClick,
 }: DeviceCardProps) {
     const { isGuest, tooltip } = useGuestReadOnly()
     const lastPolledDist = safeFormatDistanceToNow(device.lastPolledAt)
     const lastSyncedDist = safeFormatDistanceToNow(device.lastSyncedAt, { addSuffix: true })
+    const isSimulator =
+        device.ip === '127.0.0.1' ||
+        device.ip === 'localhost' ||
+        device.ip === 'simulator' ||
+        device.name.toLowerCase().includes('simulator') ||
+        device.name.toLowerCase().includes('virtual')
     return (
         <Card className="bg-card border-border overflow-hidden">
             {/* Card Header */}
@@ -89,6 +97,14 @@ export function DeviceCard({
                             >
                                 {device.syncEnabled ? '⟳ Sync On' : '⏸ Sync Off'}
                             </Badge>
+                            {isSimulator && (
+                                <Badge
+                                    variant="outline"
+                                    className="text-[10px] bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 flex items-center gap-1 font-semibold"
+                                >
+                                    <Sparkles className="w-2.5 h-2.5" /> Virtual
+                                </Badge>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -225,6 +241,35 @@ export function DeviceCard({
                             : <><RefreshCw className="w-3.5 h-3.5" /> Reconcile</>}
                     </Button>
                 </div>
+
+                {/* Simulator Action Row */}
+                {isSimulator && onSimulateClick && (
+                    <div className="flex gap-2">
+                        <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => !isGuest && onSimulateClick(device)}
+                            disabled={isTesting || isToggling || isReconciling || isGuest}
+                            aria-disabled={isGuest}
+                            title={isGuest ? tooltip : undefined}
+                            className={isGuest 
+                                ? "flex-1 gap-1.5 text-xs opacity-50 cursor-not-allowed border-border" 
+                                : "flex-1 gap-1.5 text-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-sm font-semibold"}
+                        >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Simulate Scan
+                        </Button>
+                        <a
+                            href="http://localhost:3030"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Open Virtual Terminal Face"
+                            className="inline-flex items-center justify-center px-2.5 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 text-xs transition-colors shrink-0"
+                        >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                    </div>
+                )}
 
                 <div className="flex gap-2 w-full">
                     {/* Edit */}

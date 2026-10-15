@@ -34,6 +34,7 @@ export type AuditAction =
     | 'SYNC_QUEUE_FAIL'
     | 'SYNC_QUEUE_SUCCESS'
     | 'RECONCILE'
+    | 'SIMULATE_PUNCH'
     // System
     | 'CONFIG_UPDATE'
     | 'EXPORT'

@@ -44,7 +44,7 @@ const convertPHTtoUTC = (deviceDate: Date): Date => {
     return new Date(rawUTC.getTime() - (8 * 60 * 60 * 1000));
 };
 
-async function syncSingleDevice(dbDevice: {
+export async function syncSingleDevice(dbDevice: {
     id: number;
     name: string;
     ip: string;

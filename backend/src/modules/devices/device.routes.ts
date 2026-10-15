@@ -14,6 +14,7 @@ import {
     getDeviceAdministrators,
     setDeviceAdministrators,
     removeDeviceAdministrator,
+    simulateDevicePunch,
 } from './device.controller';
 import { authenticate } from '../../shared/middleware/auth.middleware';
 import { adminManagerOrHR } from '../../shared/middleware/role.middleware';
@@ -198,6 +199,46 @@ router.post('/:id/test', testDeviceConnection);
  *         description: Device not found
  */
 router.post('/:id/reconcile', reconcileDevice);
+
+/**
+ * @swagger
+ * /api/devices/{id}/simulate-punch:
+ *   post:
+ *     summary: Trigger a simulated biometric punch on a virtual terminal/simulator
+ *     tags: [Devices]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - employeeId
+ *             properties:
+ *               employeeId:
+ *                 type: integer
+ *               state:
+ *                 type: integer
+ *                 description: 0 = Check-In, 1 = Check-Out, 4 = Overtime In, 5 = Overtime Out
+ *               verifyType:
+ *                 type: integer
+ *                 description: 1 = Fingerprint, 2 = Card, 3 = Password
+ *               autoSync:
+ *                 type: boolean
+ *                 default: true
+ *     responses:
+ *       200:
+ *         description: Punch executed and synced
+ */
+router.post('/:id/simulate-punch', simulateDevicePunch);
 
 /**
  * @swagger
