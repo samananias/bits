@@ -14,7 +14,8 @@ This directory contains research, architectural analysis, implementation guides,
 docs/
 ├── README.md                                      # Documentation index and directory map
 ├── research/
-│   └── zkteco-simulator-research.md               # Full protocol and simulator engine analysis
+│   ├── zkteco-simulator-research.md               # Full protocol and simulator engine analysis
+│   └── simulator-architecture-and-integration-plan.md # App vs Web evaluation & phased integration plan
 ├── analysis/
 │   └── system-integration-analysis.md             # Integration analysis with BITS backend & frontend
 ├── guides/
@@ -33,19 +34,24 @@ docs/
 - Explores dataset encoding (72-byte user record, 40-byte attendance log, 32-byte event record, fingerprint template storage).
 - Reviews simulator architecture: protocol engine, store layer (memory & sqlite), HTTP/WebSocket layer, and device-face web UI.
 
-### 2. [Analysis: System Integration Analysis](file:///c:/antigravity-proj/samananias-org/bits/docs/analysis/system-integration-analysis.md)
+### 2. [Research & Plan: Simulator Architecture & Integration Plan](file:///c:/antigravity-proj/samananias-org/bits/docs/research/simulator-architecture-and-integration-plan.md)
+- Trade-off evaluation between Native Desktop App (Electron/Tauri) vs. Web Application.
+- Recommends a Hybrid Web Architecture (headless TCP protocol engine + responsive web terminal kiosk + BITS Admin embedded controls).
+- End-to-end data flow and multi-phase implementation roadmap.
+
+### 3. [Analysis: System Integration Analysis](file:///c:/antigravity-proj/samananias-org/bits/docs/analysis/system-integration-analysis.md)
 - Compares BITS `ZKDriver` (`backend/src/shared/lib/zk-driver.ts`) with simulator wire protocol capabilities.
 - Details the attendance sync cycle (`SyncScheduler` -> `syncZkData` -> `prisma.attendanceLog` -> `processAttendanceLogs`).
 - Evaluates biometric enrollment and fingerprint template push/pull sequences (`CMD_PREPARE_DATA` -> `CMD_DATA` -> `CMD_TMP_WRITE`).
 - Analyzes port conflict risks (e.g. Frontend :3000 vs Simulator default :3000) and networking topology in Docker vs Localhost.
 
-### 3. [Guides: Implementation & Integration Guide](file:///c:/antigravity-proj/samananias-org/bits/docs/guides/implementation-and-integration-guide.md)
+### 4. [Guides: Implementation & Integration Guide](file:///c:/antigravity-proj/samananias-org/bits/docs/guides/implementation-and-integration-guide.md)
 - Quickstart guide for running the simulator standalone or inside Docker Compose.
 - Configuration reference for simulator environment variables (`ZK_TCP_PORT`, `ZK_HTTP_PORT`, `ZK_STORE`, `ZK_SEED`).
 - Instructions for registering the simulator in BITS as a virtual device.
 - Testing workflows: connection test, syncing users to the device, triggering punches, and validating attendance records in the BITS Admin portal.
 
-### 4. [Goals: Future Features & Roadmap](file:///c:/antigravity-proj/samananias-org/bits/docs/goals/future-features-and-roadmap.md)
+### 5. [Goals: Future Features & Roadmap](file:///c:/antigravity-proj/samananias-org/bits/docs/goals/future-features-and-roadmap.md)
 - Milestone roadmap:
   - **Phase 1: Zero-Hardware Local Dev & QA (Immediate)** — Docker service, seed synchronization, end-to-end punch verification.
   - **Phase 2: Realtime Push Sync (Near-term)** — Replacing 30-second polling with instant `EF_ATTLOG` socket streaming.
