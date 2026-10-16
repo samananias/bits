@@ -3,6 +3,9 @@ import { prisma } from './prisma';
 export interface DeviceInfo {
     serialNumber: string;
     version?: string;
+    logCounts?: number;
+    logCapacity?: number;
+    userCounts?: number;
 }
 
 export interface DeviceTime {
@@ -104,7 +107,27 @@ export class ZKDriver {
      */
     async getInfo(): Promise<DeviceInfo> {
         if (!this.zkInstance) throw new Error('Not connected');
-        return await this.zkInstance.getInfo();
+        const raw = (await this.zkInstance.getInfo()) as unknown as Record<string, unknown>;
+        let serialNumber = typeof raw?.serialNumber === 'string' ? raw.serialNumber : '';
+        if (!serialNumber || serialNumber === 'N/A') {
+            try {
+                const { COMMANDS } = require('node-zklib/constants');
+                const reply = await this.zkInstance.executeCmd(COMMANDS.CMD_OPTIONS_RRQ, '~SerialNumber');
+                if (reply && reply.length > 8) {
+                    const text = reply.subarray(8).toString('ascii').replace(/\0.*$/, '').trim();
+                    if (text) {
+                        const m = text.match(/~SerialNumber=([^\0]+)/);
+                        serialNumber = m ? m[1].trim() : text;
+                    }
+                }
+            } catch {
+                // best effort
+            }
+        }
+        return {
+            ...raw,
+            serialNumber: serialNumber || 'N/A',
+        };
     }
 
     /**

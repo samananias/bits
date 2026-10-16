@@ -7,12 +7,11 @@ import { Card } from '@/components/ui/card'
 import { useDeviceStream, DeviceStatusPayload, DeviceConnectedPayload } from '@/features/devices/hooks/useDeviceStream'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Plus, Server, RadioTower, Loader2, AlertCircle, RefreshCw, ShieldCheck, Users, Trash2, Search, X, Check } from 'lucide-react'
+import { Plus, Server, RadioTower, Loader2, AlertCircle, RefreshCw, ShieldCheck, Users, Trash2, Search, X, Check, Monitor } from 'lucide-react'
 
 import { DeviceConfigureModal, Device, FormState } from '@/features/devices/components/DeviceConfigureModal'
 import { DeviceReconcileModal } from '@/features/devices/components/DeviceReconcileModal'
 import { DeviceDeleteConfirmModal } from '@/features/devices/components/DeviceDeleteConfirmModal'
-import { DeviceSimulateModal } from '@/features/devices/components/DeviceSimulateModal'
 import { DeviceCard } from '@/features/devices/components/DeviceCard'
 import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
 
@@ -78,8 +77,6 @@ export default function DevicesPage() {
     const [reconcilingId, setReconcilingId] = useState<number | null>(null)
     const [reconcileTarget, setReconcileTarget] = useState<Device | null>(null)
 
-    // Simulate Scan state
-    const [simulateTarget, setSimulateTarget] = useState<Device | null>(null)
 
     // Device Admin state
     const [administrators, setAdministrators] = useState<AdminEnrollment[]>([])
@@ -478,7 +475,7 @@ export default function DevicesPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
-                    <Button variant="outline" size="sm" onClick={fetchDevices} className="gap-2 border-border">
+                    <Button variant="outline" size="sm" onClick={fetchDevices} className="gap-2 border-border cursor-pointer">
                         <RefreshCw className="w-4 h-4" />
                         <span className="hidden sm:inline">Refresh</span>
                     </Button>
@@ -487,7 +484,7 @@ export default function DevicesPage() {
                         aria-disabled={isGuest}
                         onClick={openAdd}
                         title={isGuest ? tooltip : undefined}
-                        className={isGuest ? "bg-slate-300 text-slate-500 gap-2 cursor-not-allowed opacity-60" : "bg-primary hover:bg-primary/90 gap-2"}
+                        className={isGuest ? "bg-slate-300 text-slate-500 gap-2 cursor-not-allowed opacity-60" : "bg-primary hover:bg-primary/90 gap-2 cursor-pointer"}
                     >
                         <Plus className="w-4 h-4" />
                         Add Device
@@ -512,6 +509,7 @@ export default function DevicesPage() {
                     </AlertDescription>
                 </Alert>
             )}
+
 
             {loading ? (
                 <div className="flex items-center justify-center py-20">
@@ -557,7 +555,6 @@ export default function DevicesPage() {
                             onConfirmReconcile={(d) => setReconcileTarget(d)}
                             onOpenEdit={openEdit}
                             onDeleteClick={(d) => setDeleteTarget(d)}
-                            onSimulateClick={(d) => setSimulateTarget(d)}
                         />
                     ))}
                 </div>
@@ -783,16 +780,6 @@ export default function DevicesPage() {
                 onConfirm={handleDelete} 
             />
 
-            <DeviceSimulateModal
-                device={simulateTarget}
-                employees={employees}
-                isOpen={simulateTarget !== null}
-                onClose={() => setSimulateTarget(null)}
-                onSuccess={(msg) => {
-                    showToast('success', 'Simulated Scan', msg)
-                    fetchDevices()
-                }}
-            />
 
             {/* ── Manage Device Administrators Modal ─────────────────────── */}
             {showAdminModal && (

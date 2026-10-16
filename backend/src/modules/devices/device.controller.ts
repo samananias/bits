@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../shared/lib/prisma';
 import { ZKDriver } from '../../shared/lib/zk-driver';
-import { forceReleaseLock } from './zk';
+import { forceReleaseLock, zkRealtimeService } from './zk';
 import deviceEmitter from '../../shared/events/deviceEmitter';
 import { audit } from '../../shared/lib/auditLogger';
 import { auditUpdate, auditCreate, auditDelete, auditBatch, buildChanges } from '../../shared/lib/auditHelpers';
@@ -24,7 +24,7 @@ function zkErrMsg(err: unknown): string {
 export const getAllDevices = async (req: Request, res: Response) => {
     try {
         const devicesRaw = await prisma.device.findMany({
-            orderBy: { createdAt: 'asc' },
+            orderBy: [{ isActive: 'desc' }, { id: 'asc' }],
             include: {
                 _count: {
                     select: { DeviceSyncTasks: { where: { status: 'PENDING' } } }
@@ -98,6 +98,8 @@ export const createDevice = async (req: Request, res: Response) => {
             ip: device.ip
         });
 
+        void zkRealtimeService.syncDeviceList();
+
         res.status(201).json({ success: true, message: `Device "${device.name}" added successfully`, device });
     } catch (error: unknown) {
         console.error('[Devices] Error creating device:', error);
@@ -162,6 +164,8 @@ export const updateDevice = async (req: Request, res: Response) => {
             correlationId: req.correlationId
         }, changes);
 
+        void zkRealtimeService.syncDeviceList();
+
         res.json({ success: true, message: `Device "${device.name}" updated. Please test the connection.`, device });
     } catch (error: unknown) {
         console.error('[Devices] Error updating device:', error);
@@ -195,6 +199,7 @@ export const deleteDevice = async (req: Request, res: Response) => {
         });
 
         console.log(`[Devices] Deleted device ID ${id}: "${existing.name}"`);
+        void zkRealtimeService.syncDeviceList();
         res.json({ success: true, message: `Device "${existing.name}" removed successfully` });
     } catch (error: unknown) {
         console.error('[Devices] Error deleting device:', error);
@@ -256,6 +261,7 @@ export const testDeviceConnection = async (req: Request, res: Response) => {
         // Emit a status change only when the state actually changed so open tabs
         // do not re-render unnecessarily on repeated test calls with the same result.
         if (wasActive !== connected) {
+            void zkRealtimeService.syncDeviceList();
             deviceEmitter.emit('status-change', {
                 id: device.id,
                 name: device.name,
@@ -413,6 +419,7 @@ export const toggleDevice = async (req: Request, res: Response) => {
 
         const state = updated.syncEnabled ? 'enabled' : 'disabled';
         console.log(`[Devices] Sync ${state} for "${updated.name}" (${updated.ip})`);
+        void zkRealtimeService.syncDeviceList();
 
         void auditUpdate({
             entityType: 'Device',
@@ -575,11 +582,16 @@ export const streamDeviceStatus = async (req: Request, res: Response): Promise<v
         res.write(`event: dead-letter\ndata: ${JSON.stringify(payload)}\n\n`);
     };
 
+    const onLivePunch = (payload: any) => {
+        res.write(`event: attendance-live-punch\ndata: ${JSON.stringify(payload)}\n\n`);
+    };
+
     deviceEmitter.on('status-change', onStatusChange);
     deviceEmitter.on('device-sync-result', onSyncResult);
     deviceEmitter.on('config-update', onConfigUpdate);
     deviceEmitter.on('enrollment-gap', onEnrollmentGap);
     deviceEmitter.on('dead-letter', onDeadLetter);
+    deviceEmitter.on('attendance-live-punch', onLivePunch);
 
     req.on('close', () => {
         clearInterval(heartbeatInterval);
@@ -588,6 +600,7 @@ export const streamDeviceStatus = async (req: Request, res: Response): Promise<v
         deviceEmitter.off('config-update', onConfigUpdate);
         deviceEmitter.off('enrollment-gap', onEnrollmentGap);
         deviceEmitter.off('dead-letter', onDeadLetter);
+        deviceEmitter.off('attendance-live-punch', onLivePunch);
         console.log(`[SSE] Client disconnected from device stream`);
     });
 
@@ -852,6 +865,13 @@ export const removeDeviceAdministrator = async (req: Request, res: Response) => 
 
 // ─── POST /api/devices/:id/simulate-punch ─────────────────────────────────────
 export const simulateDevicePunch = async (req: Request, res: Response) => {
+    if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DEVICE_SIMULATOR !== 'true') {
+        return res.status(403).json({
+            success: false,
+            message: 'Simulated punch is disabled in production. Set ENABLE_DEVICE_SIMULATOR=true to enable.'
+        });
+    }
+
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) {
         return res.status(400).json({ success: false, message: 'Invalid device ID' });
@@ -863,7 +883,7 @@ export const simulateDevicePunch = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, message: 'Device not found' });
         }
 
-        const { employeeId, state = 0, verifyType = 1, autoSync = true } = req.body;
+        const { employeeId, state = 0, verifyType = 1, autoSync = true, timestamp } = req.body;
         if (!employeeId) {
             return res.status(400).json({ success: false, message: 'Employee ID is required' });
         }
@@ -900,6 +920,7 @@ export const simulateDevicePunch = async (req: Request, res: Response) => {
                     userId: String(employee.zkId),
                     state: Number(state),
                     verifyType: Number(verifyType),
+                    ...(timestamp ? { timestamp } : {}),
                 }),
                 signal: AbortSignal.timeout(5000),
             });

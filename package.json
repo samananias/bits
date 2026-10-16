@@ -1,7 +1,15 @@
 {
+  "name": "bits-workspace",
+  "version": "1.0.0",
+  "private": true,
   "scripts": {
     "dev:simulator": "npm --prefix simulator run dev",
-    "test:simulator": "npm --prefix simulator test"
+    "build:simulator": "npm --prefix simulator run build",
+    "test:simulator": "npm --prefix simulator test",
+    "test:pyzk": "python tests/m4_pyzk_validation.py",
+    "test:e2e": "node --test tests/e2e/m2-poc.test.mjs",
+    "test:all": "npm run test:simulator && npm run test:pyzk && npm run test:e2e",
+    "db:seed": "npm --prefix backend run seed"
   },
   "dependencies": {
     "@neon/config": "^1.8.4",

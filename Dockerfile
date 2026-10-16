@@ -35,9 +35,10 @@ ENV NODE_ENV=production \
     ZK_HOST=127.0.0.1 \
     ZK_PORT=4370 \
     ZK_TCP_PORT=4370 \
-    ZK_HTTP_PORT=4371 \
+    ZK_HTTP_PORT=3030 \
+    SIMULATOR_HTTP_PORT=3030 \
     TZ=Asia/Manila
 
-EXPOSE 3001 4370 4371
+EXPOSE 3001 4370 3030
 
 CMD ["/app/entrypoint.sh"]

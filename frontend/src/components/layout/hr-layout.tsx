@@ -10,6 +10,7 @@ import Sidebar from './hr-sidebar'
 import TopBar from './hr-topbar'
 import { GuestActionNotice } from './shared/GuestActionNotice'
 import { GlobalLoading } from '@/components/ui/GlobalLoading'
+import { DeviceStreamProvider } from '@/context/DeviceStreamContext'
 
 export function HRLayout({ children }: { children: React.ReactNode }) {
     const { isLoading, isAuthenticated, employee } = useAuth('HR')
@@ -31,33 +32,35 @@ export function HRLayout({ children }: { children: React.ReactNode }) {
     const guestRole = employee?.isGuest ? (employee.guestViewRole ?? employee.role) : undefined
 
     return (
-        <div className="h-screen bg-slate-50 overflow-hidden relative">
-            <SessionExpiredModal />
-            <SessionExpiringWarning />
-            {guestRole && <GuestActionNotice />}
-            <a
-                href="#main-content"
-                className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-brand focus:font-bold"
-            >
-                Skip to main content
-            </a>
+        <DeviceStreamProvider>
+            <div className="h-screen bg-slate-50 overflow-hidden relative">
+                <SessionExpiredModal />
+                <SessionExpiringWarning />
+                {guestRole && <GuestActionNotice />}
+                <a
+                    href="#main-content"
+                    className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-brand focus:font-bold"
+                >
+                    Skip to main content
+                </a>
 
-            <header className="fixed top-0 left-0 right-0 z-40 h-16">
-                <TopBar setIsMobileOpen={setIsMobileOpen} guestRole={guestRole} />
-            </header>
+                <header className="fixed top-0 left-0 right-0 z-40 h-16">
+                    <TopBar setIsMobileOpen={setIsMobileOpen} guestRole={guestRole} />
+                </header>
 
-            <Sidebar
-                isMobileOpen={isMobileOpen}
-                setIsMobileOpen={setIsMobileOpen}
-                isCollapsed={isCollapsed}
-                setIsCollapsed={setIsCollapsed}
-            />
+                <Sidebar
+                    isMobileOpen={isMobileOpen}
+                    setIsMobileOpen={setIsMobileOpen}
+                    isCollapsed={isCollapsed}
+                    setIsCollapsed={setIsCollapsed}
+                />
 
-            <div className={`h-[calc(100vh-4rem)] mt-16 transition-all duration-300 ${isCollapsed ? 'lg:ml-24' : 'lg:ml-68'}`}>
-                <main id="main-content" className="h-full overflow-y-auto scrollbar-light p-4 md:p-8">
-                    {children}
-                </main>
+                <div className={`h-[calc(100vh-4rem)] mt-16 transition-all duration-300 ${isCollapsed ? 'lg:ml-24' : 'lg:ml-68'}`}>
+                    <main id="main-content" className="h-full overflow-y-auto scrollbar-light p-4 md:p-8">
+                        {children}
+                    </main>
+                </div>
             </div>
-        </div>
+        </DeviceStreamProvider>
     )
 }

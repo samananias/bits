@@ -5,5 +5,4 @@ export * from './zk-fingerprint.service';
 export * from './zk-card.service';
 export * from './zk-reconcile.service';
 export * from './zk-sync.service';
-
-
+export * from './zk-realtime.service';

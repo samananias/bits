@@ -32,6 +32,20 @@ export interface DeviceSyncResultPayload {
     lastPolledAt?: string
 }
 
+export interface DeviceLivePunchPayload {
+    deviceId: number
+    deviceName: string
+    deviceIp: string
+    zkUserId: number
+    employeeId: number
+    employeeName: string
+    authMethod: 'FINGERPRINT' | 'CARD' | 'PASSWORD'
+    verifyType: number
+    deviceTimestamp: string
+    utcTimestamp: string
+    processedDurationMs: number
+}
+
 interface UseDeviceStreamOptions {
     /**
      * Called each time a device changes status (online ↔ offline).
@@ -55,6 +69,10 @@ interface UseDeviceStreamOptions {
      */
     onSyncResult?: (payload: DeviceSyncResultPayload) => void
     /**
+     * Called when a sub-second live attendance punch is captured via EF_ATTLOG.
+     */
+    onLivePunch?: (payload: DeviceLivePunchPayload) => void
+    /**
      * Set to false to disable the stream. Defaults to true.
      */
     enabled?: boolean
@@ -72,6 +90,7 @@ export function useDeviceStream({
     onConnected,
     onConfigUpdate,
     onSyncResult,
+    onLivePunch,
     enabled = true,
 }: UseDeviceStreamOptions): void {
     const esRef = useRef<EventSource | null>(null)
@@ -83,13 +102,15 @@ export function useDeviceStream({
     const onConnectedRef = useRef(onConnected)
     const onConfigUpdateRef = useRef(onConfigUpdate)
     const onSyncResultRef = useRef(onSyncResult)
+    const onLivePunchRef = useRef(onLivePunch)
 
     useEffect(() => {
         onStatusChangeRef.current = onStatusChange
         onConnectedRef.current = onConnected
         onConfigUpdateRef.current = onConfigUpdate
         onSyncResultRef.current = onSyncResult
-    }, [onStatusChange, onConnected, onConfigUpdate, onSyncResult])
+        onLivePunchRef.current = onLivePunch
+    }, [onStatusChange, onConnected, onConfigUpdate, onSyncResult, onLivePunch])
 
     const connect = useCallback(() => {
         if (esRef.current) {
@@ -129,6 +150,15 @@ export function useDeviceStream({
                 onSyncResultRef.current?.(payload)
             } catch (err) {
                 console.error('[SSE] Failed to parse device-sync-result event:', err)
+            }
+        })
+
+        es.addEventListener('attendance-live-punch', (event: MessageEvent) => {
+            try {
+                const payload: DeviceLivePunchPayload = JSON.parse(event.data)
+                onLivePunchRef.current?.(payload)
+            } catch (err) {
+                console.error('[SSE] Failed to parse attendance-live-punch event:', err)
             }
         })
 

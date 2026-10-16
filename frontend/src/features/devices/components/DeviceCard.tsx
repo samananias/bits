@@ -1,11 +1,12 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Wifi, WifiOff, Server, MapPin, ListTodo, Clock, Check, AlertCircle, Loader2, Activity, RefreshCw, Pencil, Trash2, Sparkles, ExternalLink } from 'lucide-react'
+import { Wifi, WifiOff, Server, MapPin, ListTodo, Clock, Check, AlertCircle, Loader2, Activity, RefreshCw, Pencil, Trash2, Sparkles, ExternalLink, Monitor, HelpCircle } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import { Device } from './DeviceConfigureModal'
 import { useGuestReadOnly } from '@/hooks/useGuestReadOnly'
+import { VirtualTerminalInfoModal } from './VirtualTerminalInfoModal'
 
 function safeFormatDistanceToNow(val: string | Date | null | undefined, options?: Parameters<typeof formatDistanceToNow>[1]): string | null {
     if (!val) return null
@@ -40,7 +41,6 @@ interface DeviceCardProps {
     onConfirmReconcile: (device: Device) => void;
     onOpenEdit: (device: Device) => void;
     onDeleteClick: (device: Device) => void;
-    onSimulateClick?: (device: Device) => void;
 }
 
 export function DeviceCard({
@@ -54,8 +54,8 @@ export function DeviceCard({
     onConfirmReconcile,
     onOpenEdit,
     onDeleteClick,
-    onSimulateClick,
 }: DeviceCardProps) {
+    const [showInfoModal, setShowInfoModal] = useState(false)
     const { isGuest, tooltip } = useGuestReadOnly()
     const lastPolledDist = safeFormatDistanceToNow(device.lastPolledAt)
     const lastSyncedDist = safeFormatDistanceToNow(device.lastSyncedAt, { addSuffix: true })
@@ -97,31 +97,25 @@ export function DeviceCard({
                             >
                                 {device.syncEnabled ? '⟳ Sync On' : '⏸ Sync Off'}
                             </Badge>
-                            {isSimulator && (
-                                <Badge
-                                    variant="outline"
-                                    className="text-[10px] bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 flex items-center gap-1 font-semibold"
-                                >
-                                    <Sparkles className="w-2.5 h-2.5" /> Virtual
-                                </Badge>
-                            )}
                         </div>
                     </div>
                 </div>
-                {/* Sync On/Off Toggle */}
-                <button
-                    onClick={() => !isGuest && onToggleSync(device)}
-                    disabled={isToggling || isGuest}
-                    aria-disabled={isGuest}
-                    title={isGuest ? tooltip : (device.syncEnabled ? 'Disable sync for this device' : 'Enable sync for this device')}
-                    className={`relative flex items-center shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${device.syncEnabled
-                            ? (isGuest ? 'bg-primary/50' : 'bg-primary')
-                            : 'bg-secondary border border-border'
-                        } ${isToggling || isGuest ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                    <span className={`inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-200 ${device.syncEnabled ? 'translate-x-6' : 'translate-x-1'
-                        }`} />
-                </button>
+                {/* Header Actions: Sync Toggle */}
+                <div className="flex items-center gap-2 shrink-0">
+                    <button
+                        onClick={() => !isGuest && onToggleSync(device)}
+                        disabled={isToggling || isGuest}
+                        aria-disabled={isGuest}
+                        title={isGuest ? tooltip : (device.syncEnabled ? 'Disable sync for this device' : 'Enable sync for this device')}
+                        className={`relative flex items-center shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${device.syncEnabled
+                                ? (isGuest ? 'bg-primary/50' : 'bg-primary')
+                                : 'bg-secondary border border-border'
+                            } ${isToggling || isGuest ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                        <span className={`inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-200 ${device.syncEnabled ? 'translate-x-6' : 'translate-x-1'
+                            }`} />
+                    </button>
+                </div>
             </div>
 
             {/* Device Info */}
@@ -242,65 +236,80 @@ export function DeviceCard({
                     </Button>
                 </div>
 
-                {/* Simulator Action Row */}
-                {isSimulator && onSimulateClick && (
-                    <div className="flex gap-2">
+                {/* Action Row 2: Configure & Delete for physical devices, or Virtual Terminal controls for simulator */}
+                {!isSimulator ? (
+                    <div className="flex gap-2 w-full">
+                        {/* Edit */}
                         <Button
-                            variant="default"
+                            variant="outline"
                             size="sm"
-                            onClick={() => !isGuest && onSimulateClick(device)}
-                            disabled={isTesting || isToggling || isReconciling || isGuest}
+                            disabled={isGuest}
                             aria-disabled={isGuest}
+                            onClick={() => !isGuest && onOpenEdit(device)}
                             title={isGuest ? tooltip : undefined}
-                            className={isGuest 
-                                ? "flex-1 gap-1.5 text-xs opacity-50 cursor-not-allowed border-border" 
-                                : "flex-1 gap-1.5 text-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-sm font-semibold"}
+                            className={isGuest ? "flex-1 gap-1.5 border-border text-sm text-slate-400 opacity-40 cursor-not-allowed" : "flex-1 gap-1.5 border-border text-sm"}
                         >
-                            <Sparkles className="w-3.5 h-3.5" />
-                            Simulate Scan
+                            <Pencil className="w-3.5 h-3.5" />
+                            Configure
                         </Button>
+
+                        {/* Delete */}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isGuest}
+                            aria-disabled={isGuest}
+                            onClick={() => !isGuest && onDeleteClick(device)}
+                            title={isGuest ? tooltip : undefined}
+                            className={isGuest ? "border-border text-slate-400 opacity-40 cursor-not-allowed text-sm px-3 shrink-0" : "border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-sm px-3 shrink-0"}
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="flex gap-2 w-full">
                         <a
-                            href="http://localhost:3030"
+                            href={process.env.NEXT_PUBLIC_ZK_SIMULATOR_URL || "http://localhost:3030"}
                             target="_blank"
                             rel="noopener noreferrer"
-                            title="Open Virtual Terminal Face"
-                            className="inline-flex items-center justify-center px-2.5 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 text-xs transition-colors shrink-0"
+                            className="flex-1 flex"
                         >
-                            <ExternalLink className="w-3.5 h-3.5" />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="w-full gap-2 border-border text-sm text-foreground hover:bg-secondary transition-all cursor-pointer"
+                            >
+                                <Monitor className="w-3.5 h-3.5 text-primary" />
+                                <span>Open Virtual Terminal</span>
+                                <ExternalLink className="w-3 h-3 text-muted-foreground ml-auto" />
+                            </Button>
                         </a>
+
+                        {/* Instructions Modal Trigger Button */}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowInfoModal(true)}
+                            className="border-border text-muted-foreground hover:text-foreground hover:bg-secondary text-sm px-3 shrink-0 transition-all cursor-pointer"
+                            title="Virtual Terminal Instructions & Guide"
+                            aria-label="Virtual Terminal Instructions & Guide"
+                        >
+                            <HelpCircle className="w-3.5 h-3.5 text-primary" />
+                        </Button>
                     </div>
                 )}
 
-                <div className="flex gap-2 w-full">
-                    {/* Edit */}
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={isGuest}
-                        aria-disabled={isGuest}
-                        onClick={() => !isGuest && onOpenEdit(device)}
-                        title={isGuest ? tooltip : undefined}
-                        className={isGuest ? "flex-1 gap-1.5 border-border text-sm text-slate-400 opacity-40 cursor-not-allowed" : "flex-1 gap-1.5 border-border text-sm"}
-                    >
-                        <Pencil className="w-3.5 h-3.5" />
-                        Configure
-                    </Button>
-
-                    {/* Delete */}
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={isGuest}
-                        aria-disabled={isGuest}
-                        onClick={() => !isGuest && onDeleteClick(device)}
-                        title={isGuest ? tooltip : undefined}
-                        className={isGuest ? "border-border text-slate-400 opacity-40 cursor-not-allowed text-sm px-3 shrink-0" : "border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-sm px-3 shrink-0"}
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                </div>
-
             </div>
+
+            {/* Virtual Terminal Instructions & Clarification Modal */}
+            {isSimulator && (
+                <VirtualTerminalInfoModal
+                    isOpen={showInfoModal}
+                    onClose={() => setShowInfoModal(false)}
+                />
+            )}
         </Card>
     );
 }

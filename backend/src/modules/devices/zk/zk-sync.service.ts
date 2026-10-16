@@ -100,10 +100,15 @@ export async function syncSingleDevice(dbDevice: {
         const allLogs = await zk.getLogs();
 
         // 3. Filter and sort logs by watermark.
+        // For local virtual simulator (127.0.0.1), allow all logs within the 48-hour rolling window
+        // so shift scenario testing (switching between 08:00 AM, 08:15 AM, 17:00 PM) is never blocked.
+        // Prisma's unique constraint on (timestamp, employeeId) strictly prevents duplicates.
+        const isSimulator = dbDevice.ip === '127.0.0.1';
+        const minWindow = new Date(Date.now() - FALLBACK_WINDOW_MS);
         const logs = allLogs
             .filter((log) => {
                 const logUTC = convertPHTtoUTC(log.recordTime);
-                return logUTC > watermark;
+                return isSimulator ? logUTC >= minWindow : logUTC > watermark;
             })
             .sort((a, b) =>
                 convertPHTtoUTC(a.recordTime).getTime() -

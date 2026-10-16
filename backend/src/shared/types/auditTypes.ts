@@ -35,6 +35,7 @@ export type AuditAction =
     | 'SYNC_QUEUE_SUCCESS'
     | 'RECONCILE'
     | 'SIMULATE_PUNCH'
+    | 'LIVE_PUNCH'
     // System
     | 'CONFIG_UPDATE'
     | 'EXPORT'
@@ -43,7 +44,8 @@ export type AuditAction =
     | 'EMAIL_FAILED'
     | 'MANAGER_DEPARTMENT_UPDATE'
     | 'BIOMETRIC_EXCLUSION_ADD'
-    | 'BIOMETRIC_EXCLUSION_REMOVE';
+    | 'BIOMETRIC_EXCLUSION_REMOVE'
+    | 'SECURITY_ALERT';
 
 // ── Entity Types ─────────────────────────────────────────────────────────
 export type AuditEntity =
@@ -75,6 +77,7 @@ export type AuditSource =
     | 'api'
     | 'cron'
     | 'device-sync'
+    | 'device-stream'
     | 'health-check'
     | 'startup-repair'
     | 'sync-queue'

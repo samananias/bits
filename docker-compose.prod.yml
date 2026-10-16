@@ -78,6 +78,23 @@ services:
       - bits_network
     restart: unless-stopped          # auto-recover on crash
 
+  simulator:
+    build:
+      context: ./simulator
+      dockerfile: Dockerfile
+    container_name: bits_simulator
+    environment:
+      NODE_ENV: production
+      ZK_TCP_PORT: 4370
+      ZK_HTTP_PORT: 3030
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    ports:
+      - "4370:4370"
+      - "3030:3030"
+    networks:
+      - bits_network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
     external: true

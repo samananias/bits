@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { prisma } from './prisma';
-import { syncZkData, syncAllDeviceClocks } from '../../modules/devices/zk';
+import { syncZkData, syncAllDeviceClocks, zkRealtimeService } from '../../modules/devices/zk';
 import { syncScheduler } from '../../modules/system/syncScheduler';
 import { timeSyncScheduler } from '../../modules/system/timeSyncScheduler';
 import { healthCheckScheduler } from '../../modules/system/healthCheckScheduler';
@@ -46,6 +46,9 @@ export const startCronJobs = () => {
 
     // Ensure system configuration exists before schedulers read it
     void ensureDefaultSyncConfig();
+
+    // Realtime Stream: Persistent sub-second EF_ATTLOG event listener
+    void zkRealtimeService.start();
 
     // Job 1: Sync attendance logs from ZKTeco device
     // Uses the new dynamic SyncScheduler instead of hardcoded node-cron
