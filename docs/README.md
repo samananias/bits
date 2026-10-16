@@ -19,7 +19,9 @@ docs/
 ├── analysis/
 │   └── system-integration-analysis.md             # Integration analysis with BITS backend & frontend
 ├── guides/
-│   └── implementation-and-integration-guide.md    # Step-by-step setup, configuration & testing guide
+│   ├── implementation-and-integration-guide.md    # Step-by-step setup, configuration & testing guide
+│   ├── virtual-zkteco-terminal-guide.md           # User & operator manual for Virtual ZKTeco Terminal
+│   └── simulator-cloud-deployment-guide.md        # Cloud deployment guide for Vercel, Neon, Railway & VPS
 └── goals/
     └── future-features-and-roadmap.md             # Short, medium, and long-term goals & future features
 ```
