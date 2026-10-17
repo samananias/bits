@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export function useLogin() {
@@ -10,6 +10,41 @@ export function useLogin() {
   const [isLoading, setIsLoading] = useState(false)
   const [showLoading, setShowLoading] = useState(false)
   const [redirectPath, setRedirectPath] = useState('')
+
+  // Safety timeout and bounce-back detection to avoid infinite loading screens in cross-site iframes
+  useEffect(() => {
+    if (!showLoading) return
+
+    const timer = setTimeout(() => {
+      setShowLoading(false)
+      setIsLoading(false)
+      setIsGuestLoading(false)
+      const msg = 'Session could not be established in this embedded view. If third-party cookies are blocked by your browser, please open BITS directly in a new tab.'
+      setGuestError(msg)
+      setValidationErrors((prev) => ({ ...prev, password: msg }))
+    }, 6000)
+
+    const checkBounce = () => {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search)
+        if (params.get('from')) {
+          setShowLoading(false)
+          setIsLoading(false)
+          setIsGuestLoading(false)
+          const msg = 'Browser blocked session cookies inside this iframe. Please open BITS in a new tab or allow cross-site cookies.'
+          setGuestError(msg)
+          setValidationErrors((prev) => ({ ...prev, password: msg }))
+        }
+      }
+    }
+
+    const interval = setInterval(checkBounce, 500)
+
+    return () => {
+      clearTimeout(timer)
+      clearInterval(interval)
+    }
+  }, [showLoading])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}

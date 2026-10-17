@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthCookieBase } from '@/lib/auth-cookies';
 
 export async function POST(request: NextRequest) {
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
@@ -29,16 +30,11 @@ export async function POST(request: NextRequest) {
             { status: 200 }
         );
 
-        const cookieBase = {
-            httpOnly: true,
-            secure: process.env.COOKIE_SECURE === 'true',
-            sameSite: 'lax' as const,
-            path: '/',
-        };
+        const cookieBase = getAuthCookieBase(request);
 
         if (accessToken) {
             response.cookies.set('auth_token', accessToken, {
-                ...cookieBase,
+                ...(cookieBase as any),
                 maxAge: 45 * 60,
             });
         }

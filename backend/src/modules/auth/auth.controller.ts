@@ -12,11 +12,13 @@ import { loginLimiter } from './auth.routes';
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** Cookie options shared by both auth cookies */
+const isSecure = process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production';
 const cookieOptions = {
     httpOnly: true,
-    secure: process.env.COOKIE_SECURE === 'true',
-    sameSite: 'lax' as const,
+    secure: isSecure,
+    sameSite: (isSecure ? 'none' : 'lax') as 'none' | 'lax',
     path: '/',
+    partitioned: isSecure,
 };
 
 // ── Controllers ───────────────────────────────────────────────────────────────

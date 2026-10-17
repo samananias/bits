@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthCookieBase, clearAuthCookies } from '@/lib/auth-cookies'
 
 /**
  * POST /api/auth/refresh
@@ -30,8 +31,7 @@ export async function POST(request: NextRequest) {
             // Do NOT delete auth_token if no refresh token was provided (e.g. Guest Mode or stateless access).
             const isRevocationOrExpiry = data?.error === 'invalid_refresh_token' || data?.error === 'refresh_token_expired'
             if (isRevocationOrExpiry) {
-                errorResponse.cookies.delete('auth_token')
-                errorResponse.cookies.delete('refresh_token')
+                clearAuthCookies(errorResponse, request)
             }
             return errorResponse
         }
@@ -42,17 +42,12 @@ export async function POST(request: NextRequest) {
 
         const response = NextResponse.json({ ...safeData, success: true })
 
-        const cookieBase = {
-            httpOnly: true,
-            secure: process.env.COOKIE_SECURE === 'true',
-            sameSite: 'lax' as const,
-            path: '/',
-        }
+        const cookieBase = getAuthCookieBase(request)
 
         // Set new access token cookie (1 hour)
         if (accessToken) {
             response.cookies.set('auth_token', accessToken, {
-                ...cookieBase,
+                ...(cookieBase as any),
                 maxAge: 60 * 60,
             })
         }
@@ -60,7 +55,7 @@ export async function POST(request: NextRequest) {
         // Set new refresh token cookie (7 days)
         if (refreshTokenValue) {
             response.cookies.set('refresh_token', refreshTokenValue, {
-                ...cookieBase,
+                ...(cookieBase as any),
                 maxAge: 7 * 24 * 60 * 60,
             })
         }

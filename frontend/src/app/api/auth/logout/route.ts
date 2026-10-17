@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { clearAuthCookies } from '@/lib/auth-cookies'
 
 /**
  * POST /api/auth/logout
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
     // Clear both cookies
     const response = NextResponse.json({ success: true, message: 'Logged out' })
 
+    clearAuthCookies(response, req)
     response.cookies.delete('auth_token')
     response.cookies.delete('refresh_token')
 

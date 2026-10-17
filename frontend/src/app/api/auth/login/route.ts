@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthCookieBase } from '@/lib/auth-cookies'
 
 export async function POST(request: NextRequest) {
     // BACKEND_URL must be set in root-level .env (local) or docker-compose.yml (Docker).
@@ -40,23 +41,18 @@ export async function POST(request: NextRequest) {
             { status: 200 }
         )
 
-        const cookieBase = {
-            httpOnly: true,
-            secure: process.env.COOKIE_SECURE === 'true',
-            sameSite: 'lax' as const,
-            path: '/',
-        }
+        const cookieBase = getAuthCookieBase(request)
 
         // Access token — short lived (1 hour)
         response.cookies.set('auth_token', accessToken ?? token, {
-            ...cookieBase,
+            ...(cookieBase as any),
             maxAge: 60 * 60,
         })
 
         // Refresh token — long lived (7 days), used to silently renew access token
         if (refreshTokenValue) {
             response.cookies.set('refresh_token', refreshTokenValue, {
-                ...cookieBase,
+                ...(cookieBase as any),
                 maxAge: 7 * 24 * 60 * 60,
             })
         }
